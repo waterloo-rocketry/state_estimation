@@ -84,7 +84,7 @@ def init_rocket_state(initial_rocket: rm.Rocket) -> rm.Rocket:
 # Updates the state of the rocket to the ground_truth and sensor_data files
 # TODO: add writing to files
 def time_update():
-    current_rocket.position_enu = rm.cartesian_to_enu_2(current_rocket)
+    current_rocket.position_enu = rm.loc_cart_to_enu_2(current_rocket)
     current_rocket.velocity = rm.rocket_velocity(current_rocket, previous_time, current_time)
     current_rocket.acceleration = rm.rocket_acceleration(current_rocket)
 
@@ -108,6 +108,7 @@ with open("ground_truth.txt", 'w') as ground_truth:
         current_rocket = init_rocket_state(current_rocket)
         while current_time < end_time:
             time_update()
+            previous_time = current_time
             current_time += timestep
             # print(current_rocket.__dict__) --> this is just for debugging purposes
             current_rocket.flight_time = current_time  # TODO: fix whatever is happening here
