@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *.bak
 *.iml
 *.pdf
@@ -12,4 +13,20 @@
 .DS_Store
 /build
 /captures
+=======
+*.bak
+*.iml
+*.pdf
+*.zip
+/local.properties
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/misc.xml
+/.idea/other.xml
+/.idea/vcs.xml
+.DS_Store
+/build
+/captures
+>>>>>>> 66f7bb9f5d6fbd48d483b31678d503434ecf5956
 .externalNativeBuild
