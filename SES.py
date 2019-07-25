@@ -1,6 +1,8 @@
+# This file controls the main functionality of the State Estimation Simulator
+
 import numpy as np
 import rocket_math as rm
-# This file controls the main functionality of the State Estimation Simulator
+
 '''
 Simulator inputs:
     Rate/timestep
@@ -60,8 +62,9 @@ previous_time = 0
 
 
 # Initializing the current rocket
-current_rocket = rm.Rocket(0, 0, 0, 0, 0, 0, 0, 0, np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 0]),
-                                    np.array([0, 0, 0]), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+current_rocket = rm.Rocket(0, np.array([0.0, 0.0, 0.0]), 0, 0, 0, 0, 0, 0, np.array([0.0, 0.0, 0.0]),
+                           np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0]), 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0)
 
 
 # Getting initial params for rocket call
@@ -70,8 +73,8 @@ def init_rocket_state(initial_rocket: rm.Rocket) -> rm.Rocket:
     pressure_noise, temp_noise, accel_noise, gyro_noise, mag_noise = input("Enter noise params (pressure, temperature, "
                                                                            "acceleration, gyro, and magnetic noise):"
                                                                            " ").split()
-    initial_rocket.mass = mass
-    initial_rocket.thrust = thrust
+    initial_rocket.mass = float(mass)
+    initial_rocket.thrust[2] = thrust
     initial_rocket.burn_time = burn_time
     initial_rocket.pressure_noise = pressure_noise
     initial_rocket.temp_noise = temp_noise
@@ -82,30 +85,44 @@ def init_rocket_state(initial_rocket: rm.Rocket) -> rm.Rocket:
 
 
 # Updates the state of the rocket to the ground_truth and sensor_data files
-# TODO: add writing to files
+# TODO: add writing to sensor_data files
 def time_update():
-    current_rocket.position_enu = rm.loc_cart_to_enu_2(current_rocket)
+    current_rocket.position_enu = rm.loc_cart_to_enu_2(current_rocket)  # position should calculated first
     current_rocket.velocity = rm.rocket_velocity(current_rocket, previous_time, current_time)
     current_rocket.acceleration = rm.rocket_acceleration(current_rocket)
+    current_rocket.altitude = current_rocket.position_loc_cart[2]
 
-    ground_truth.write("")  # Add what is being written to ground_truth file here
-    sensor_data.write("")  # Add what is being written to sensor_data file here
+    new_data_gt = np.array([current_rocket.position_enu, current_rocket.velocity, current_rocket.acceleration])
+    data_gt = ["", "", ""]
+    for i, data_ele_gt in enumerate(new_data_gt):
+        data_gt[i] = np.array2string(data_ele_gt, precision=3)
+    data_to_write = ' '.join(["{0: <33}".format(data) for data in data_gt])
+    ground_truth.write(data_to_write + "\n")
+    sensor_data.write('')  # Add what is being written to sensor_data file here
 
 
-# Initializing files being writen to
-with open("ground_truth.txt", 'w') as ground_truth:
-    with open("sensor_data.txt", 'w') as sensor_data:
+# TODO: Check if the title output can be shortened
+# Initializing files being writen to and main loop for recording data
+with open("ground_truth.txt", "w") as ground_truth:
+    with open("sensor_data.txt", "w") as sensor_data:
         headings_gt = ["Position_ENU", "Velocity", "Acceleration", "Orientation"]
         headings_sd = ["Baro_Pressure", "Temperature", "Acceleration", "Angular_Rates", "Magnetic Field"]
         for (heading_gt, heading_sd) in zip(headings_gt, headings_sd):
             col_titles_gt = heading_gt.split()
             col_titles_sd = heading_sd.split()
-            initialize_headings_gt = ' '.join(['{0: <12}'.format(title_gt) for title_gt in col_titles_gt])
-            initialize_headings_sd = ' '.join(['{0: <14}'.format(title_sd) for title_sd in col_titles_sd])
-            ground_truth.write(initialize_headings_gt + '\t')
-            sensor_data.write(initialize_headings_sd + '\t')
+
+            initialize_headings_gt = ' '.join(['{0: <34}'.format(title) for title in col_titles_gt])
+            initialize_headings_sd = ' '.join(['{0: <16}'.format(title) for title in col_titles_sd])
+
+            ground_truth.write(initialize_headings_gt)
+            sensor_data.write(initialize_headings_sd)
 
         current_rocket = init_rocket_state(current_rocket)
+        rm.rocket_acceleration(current_rocket)
+        ground_truth.write("\n")
+        sensor_data.write("\n")
+
+        # time_update()
         while current_time < end_time:
             time_update()
             previous_time = current_time

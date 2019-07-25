@@ -1,11 +1,10 @@
+# This file defines the Rocket class and the general math functions needed to calculate parameters for state estimation
+
 import numpy as np
 import pymap3d
-import scipy.integrate as integrate
 # Using pyquaternion instead of numpy-quaternion because the later was harder to install (could change later if need be)
 from pyquaternion import Quaternion
 
-
-# This file defines the Rocket class and the general math functions needed to calculate parameters for state estimation
 
 # Simulator Inputs:
 #   Rate/timestep
@@ -106,64 +105,71 @@ def get_gravity(altitude) -> float:
     return float(9.79121 * ((20902231 / (20902231 + altitude)) ** 2))  # Gravity constant specific to Spaceport America
 
 
+# Calculates the magnitude of the velocity vector
 def get_vel_magnitude(current_rocket: Rocket) -> np.array([]):
     return np.sqrt(current_rocket.velocity[0] ** 2 + current_rocket.velocity[1] ** 2 +
                    current_rocket.velocity[2] ** 2)
 
 
+# Calculates the velocity unit vector
 def get_vel_unit_vector(current_rocket: Rocket) -> np.array([]):
-    vel_unit_vector = [0, 0, 0]
-    for i, val in enumerate(current_rocket.velocity):
-        vel_unit_vector[i] = current_rocket.velocity[i] / get_vel_magnitude(current_rocket)
-    return vel_unit_vector
+    if not get_vel_magnitude(current_rocket):
+        print("Magnitude of velocity is 0.\n")
+        return current_rocket.velocity
+    return current_rocket.velocity / get_vel_magnitude(current_rocket)
 
 # Other way of doing function:
 # return rocket.current_rocket.velocity / get_vel_magnitude(current_rocket)
 
 
-# Calculating air density from 3rd-degree polynomial based on plot of air density vs altitude data obtained from
+# Calculates air density from 3rd-degree polynomial based on plot of air density vs altitude data obtained from
 # https://www.engineeringtoolbox.com/standard-atmosphere-d_604.html
 def get_air_density(current_rocket: Rocket) -> float:
     alt = current_rocket.altitude
     return (-1.2694e-14 * (alt ** 3)) + (1.9121e-09 * (alt ** 2)) + (-8.7147e-05 * alt) + 1.1644e+00
 
 
-# Calculating the rocket's cross-sectional area. The 0.25 is the current radius (in ft) of the rocket (SOTS).
+# Calculates the rocket's cross-sectional area. The 0.25 is the current radius (in ft) of the rocket (SOTS).
 def get_cross_sec_area() -> float:
     temp = np.array([0.25])
     rocket_radius = ft_to_meters(temp)
-    radius_area = rocket_radius[0]
-    return np.pi * (radius_area ** 2)
+    return np.pi * (rocket_radius[0] ** 2)
 
 
 # Calculates the drag force experienced by the rocket in local cartesian [x,y,z]
 def get_drag_force(current_rocket: Rocket) -> np.array([]):
-    drag_force = np.array([0, 0, 0])
-    drag_force_mag = -0.5 * coeff_drag * (get_vel_magnitude(current_rocket) ** 2) * get_air_density(current_rocket) * \
-                 get_cross_sec_area
-    drag_force = drag_force_mag * get_vel_unit_vector(current_rocket)
-    return drag_force
+    drag_force_mag = 0.5 * coeff_drag * (get_vel_magnitude(current_rocket) ** 2) * get_air_density(current_rocket) * \
+                 get_cross_sec_area()
+    return get_vel_unit_vector(current_rocket) * drag_force_mag
 
 
-# Calculating acceleration of the rocket (from R = T - (D + G) and F = m*a) in local cartesian [x,y,z]
-# TODO: determine x,y,z acceleration
+# TODO: implement burn time
+# Calculates the thrust vector based on velocity unit vector
+def get_thrust(current_rocket: Rocket) -> np.array([]):
+    return get_vel_unit_vector(current_rocket) * (np.sqrt(current_rocket.thrust[0] ** 2 + current_rocket.thrust[1] ** 2
+                                                          + current_rocket.thrust[2] ** 2))
+
+
+# Calculates acceleration of the rocket (from R = T - (D + G) and F = m*a) in local cartesian [x,y,z]
 def rocket_acceleration(current_rocket: Rocket) -> np.array([]):
-    resultant_force = np.array([0, 0, 0])
-    resultant_force[0] = current_rocket.thrust[0] - get_drag_force(current_rocket)[0]
-    resultant_force[1] = current_rocket.thrust[1] - get_drag_force(current_rocket)[1]
-    resultant_force[2] = current_rocket.thrust[2] - ((current_rocket.mass *
-                                                            get_gravity(current_rocket.altitude)) +
-                                                                        get_drag_force(current_rocket)[2])
-    current_rocket.acceleration = resultant_force / current_rocket.mass
+    resultant_force = np.array([0.0, 0.0, 0.0])
+    drag_force = get_drag_force(current_rocket)
+    resultant_force[0] = current_rocket.thrust[0] - drag_force[0]
+    resultant_force[1] = current_rocket.thrust[1] - drag_force[1]
+    resultant_force[2] = current_rocket.thrust[2] - ((float(current_rocket.mass) * get_gravity(current_rocket.altitude))
+                                                   + drag_force[2])
+
+    if any(resultant_force):  # check for better way
+        current_rocket.acceleration = resultant_force / current_rocket.mass
     return current_rocket.acceleration
 
 
 # TODO: edit this due to the fact that methodology changed
-# Calculating the current cartesian position of the rocket [x,y,z]
+# Calculates the current cartesian position of the rocket [x,y,z]
 # Use this: https://apps.dtic.mil/dtic/tr/fulltext/u2/a484864.pdf
 # And this: https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation
 def rocket_position_local_cartesian(current_rocket: Rocket, previous_time, current_time) -> np.array([]):
-    return integrate.quad(current_rocket.velocity, previous_time, current_time)
+    return current_rocket.velocity * (current_time - previous_time)
 
 
 # TODO: delete this once new function is done
@@ -181,14 +187,13 @@ def cartesian_to_enu(current_rocket: Rocket, position_cartesian) -> np.array([])
 # Converting local cartesian to ENU for position of rocket
 # Use this for quaternion rotation: https://kieranwynn.github.io/pyquaternion/
 def loc_cart_to_enu_2(current_rocket: Rocket) -> np.array([]):
-    rot_quaternion = Quaternion(axis=[0, 0, 0], angle=0)  # TODO: make this the true scalar and vector
-    position_enu = rot_quaternion.rotate(current_rocket.position_loc_cart)
-    return position_enu
+    return np.array([0.0, 0.0, 0.0])
+    # rot_quaternion = Quaternion(axis=[0, 0, 0], angle=0)  # TODO: make this the true scalar and vector
+    # return rot_quaternion.rotate(current_rocket.position_loc_cart)
 
 
-# Calculating velocity of the rocket by integrating acceleration in local cartesian [x,y,z]
-# TODO: make times work in SES
+# Calculates velocity of the rocket by integrating acceleration in local cartesian [x,y,z]
 def rocket_velocity(current_rocket: Rocket, previous_time, current_time) -> np.array([]):
-    return integrate.quad(current_rocket.acceleration, previous_time, current_time)
+    return current_rocket.acceleration * (current_time - previous_time)
 
 
