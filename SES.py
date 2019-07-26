@@ -56,15 +56,15 @@ local_magnetic_field = 0  # TODO: figure out what we need to actually store here
 
 # Timestep setup
 timestep = 0.01
-end_time = 100
+end_time = 10
 current_time = 0
 previous_time = 0
 
 
 # Initializing the current rocket
 current_rocket = rm.Rocket(0, np.array([0.0, 0.0, 0.0]), 0, 0, 0, 0, 0, 0, np.array([0.0, 0.0, 0.0]),
-                           np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0]), 0, 0, 0, 0,
-                           0, 0, 0, 0, 0, 0, 0, 0)
+                           np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0]),
+                           np.array([0.0, 0.0, 0.0]), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 
 # Getting initial params for rocket call
@@ -75,7 +75,7 @@ def init_rocket_state(initial_rocket: rm.Rocket) -> rm.Rocket:
                                                                            " ").split()
     initial_rocket.mass = float(mass)
     initial_rocket.thrust[2] = thrust
-    initial_rocket.burn_time = burn_time
+    initial_rocket.burn_time = float(burn_time)
     initial_rocket.pressure_noise = pressure_noise
     initial_rocket.temp_noise = temp_noise
     initial_rocket.accel_noise = accel_noise
@@ -87,12 +87,15 @@ def init_rocket_state(initial_rocket: rm.Rocket) -> rm.Rocket:
 # Updates the state of the rocket to the ground_truth and sensor_data files
 # TODO: add writing to sensor_data files
 def time_update():
-    current_rocket.position_enu = rm.loc_cart_to_enu_2(current_rocket)  # position should calculated first
+    # TODO: consider making previous_time and current_time 1 variable
+    current_rocket.position_loc_cart = rm.rocket_position_local_cartesian(current_rocket, previous_time, current_time)
+    current_rocket.position_enu = rm.loc_cart_to_enu_2(current_rocket, previous_time, current_time)  # position should calculated first
     current_rocket.velocity = rm.rocket_velocity(current_rocket, previous_time, current_time)
-    current_rocket.acceleration = rm.rocket_acceleration(current_rocket)
+    current_rocket.acceleration = rm.rocket_acceleration(current_rocket, previous_time, current_time)
     current_rocket.altitude = current_rocket.position_loc_cart[2]
+    current_rocket.mass = rm.get_mass(current_rocket)
 
-    new_data_gt = np.array([current_rocket.position_enu, current_rocket.velocity, current_rocket.acceleration])
+    new_data_gt = np.array([current_rocket.position_loc_cart, current_rocket.velocity, current_rocket.acceleration])  # position is in local cartesian for testing purposes
     data_gt = ["", "", ""]
     for i, data_ele_gt in enumerate(new_data_gt):
         data_gt[i] = np.array2string(data_ele_gt, precision=3)
@@ -118,9 +121,12 @@ with open("ground_truth.txt", "w") as ground_truth:
             sensor_data.write(initialize_headings_sd)
 
         current_rocket = init_rocket_state(current_rocket)
-        rm.rocket_acceleration(current_rocket)
         ground_truth.write("\n")
         sensor_data.write("\n")
+
+        # print(type(current_rocket.burn_time))
+        print("This is burn_time: " + str(current_rocket.burn_time))
+        print("This is thrust: " + str(current_rocket.thrust))
 
         # time_update()
         while current_time < end_time:
@@ -128,7 +134,6 @@ with open("ground_truth.txt", "w") as ground_truth:
             previous_time = current_time
             current_time += timestep
             # print(current_rocket.__dict__) --> this is just for debugging purposes
-            current_rocket.flight_time = current_time  # TODO: fix whatever is happening here
 
     sensor_data.close()
 ground_truth.close()
