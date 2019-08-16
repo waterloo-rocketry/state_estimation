@@ -56,7 +56,7 @@ local_magnetic_field = 0  # TODO: figure out what we need to actually store here
 
 # Timestep setup
 timestep = 0.01
-end_time = 10
+end_time = 20
 current_time = 0
 previous_time = 0
 
@@ -67,12 +67,20 @@ current_rocket = rm.Rocket(0, np.array([0.0, 0.0, 0.0]), 0, 0, 0, 0, 0, 0, np.ar
                            np.array([0.0, 0.0, 0.0]), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 
+# TODO: add exception blocks
 # Getting initial params for rocket call
 def init_rocket_state(initial_rocket: rm.Rocket) -> rm.Rocket:
+    # try:
     mass, thrust, burn_time = input("Enter a mass, thrust, and burn time: ").split()
-    pressure_noise, temp_noise, accel_noise, gyro_noise, mag_noise = input("Enter noise params (pressure, temperature, "
-                                                                           "acceleration, gyro, and magnetic noise):"
-                                                                           " ").split()
+    # except:
+
+    # try:
+    pressure_noise, temp_noise, accel_noise, gyro_noise, mag_noise = input(
+            "Enter noise params (pressure, temperature, "
+            "acceleration, gyro, and magnetic noise):"
+            " ").split()
+    # except:
+
     initial_rocket.mass = float(mass)
     initial_rocket.thrust[2] = thrust
     initial_rocket.burn_time = float(burn_time)
@@ -88,6 +96,8 @@ def init_rocket_state(initial_rocket: rm.Rocket) -> rm.Rocket:
 # TODO: add writing to sensor_data files
 def time_update():
     # TODO: consider making previous_time and current_time 1 variable
+    current_rocket.vel_unit_vec = rm.get_vel_unit_vector(current_rocket, tower_angle)
+    current_rocket.thrust = rm.get_thrust(current_rocket, current_time)
     current_rocket.position_loc_cart = rm.rocket_position_local_cartesian(current_rocket, previous_time, current_time)
     current_rocket.position_enu = rm.loc_cart_to_enu_2(current_rocket, previous_time, current_time)  # position should calculated first
     current_rocket.velocity = rm.rocket_velocity(current_rocket, previous_time, current_time)
