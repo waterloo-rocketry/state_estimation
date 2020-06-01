@@ -1,4 +1,4 @@
-# This file defines the Rocket class and the general math functions needed to calculate parameters for state estimation
+# This file defines the Rocket class and the general math functions needed to calculate parameters for data generation
 
 import numpy as np
 import pymap3d
@@ -72,8 +72,11 @@ class Rocket:
         self.air_speed = air_speed  # in feet/second probably (ft/s)
 
 
+# TODO: add computed/determined drag coefficient
 # Temporary drag coefficient for calculating drag force
 coeff_drag = 0.3
+# Current radius (in ft) of the rocket (SOTS)
+tube_radius = 0.25
 
 # Mass lost per timestep
 # TODO: implement the proper loss
@@ -125,6 +128,10 @@ def get_vel_unit_vector(current_rocket: Rocket, launch_angle: float) -> np.array
     return current_rocket.velocity / get_vel_magnitude(current_rocket)
 
 
+# Other way of doing function:
+# return rocket.current_rocket.velocity / get_vel_magnitude(current_rocket)
+
+
 # Calculates air density from 3rd-degree polynomial based on plot of air density vs altitude data obtained
 # from [VERSION 1]
 # https://www.engineeringtoolbox.com/standard-atmosphere-d_604.html
@@ -141,10 +148,11 @@ def get_air_density(current_rocket: Rocket) -> float:
     return 1.22 * 0.9**(alt / 1000)
 
 
-# Calculates the rocket's cross-sectional area. The 0.25 is the current radius (in ft) of the rocket (SOTS).
+# Calculates the rocket's cross-sectional area [m^2]
 def get_cross_sec_area() -> float:
-    rocket_radius = 0.25  # variable so it can be changed if radius is changed
-    return np.pi * (rocket_radius ** 2)
+    temp = np.array([tube_radius])
+    rocket_radius = ft_to_meters(temp)
+    return np.pi * (rocket_radius[0] ** 2)
 
 
 # Calculates the drag force experienced by the rocket in local cartesian vector form [x,y,z] (in ft)
@@ -220,5 +228,3 @@ def loc_cart_to_enu_2(current_rocket: Rocket, previous_time: float, current_time
 # Calculates velocity of the rocket by integrating acceleration in local cartesian vector form [x,y,z]
 def rocket_velocity(current_rocket: Rocket, previous_time: float, current_time: float) -> np.array([]):
     return current_rocket.velocity + current_rocket.acceleration * (current_time - previous_time)
-
-

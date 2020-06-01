@@ -1,4 +1,4 @@
-# This file controls the main functionality of the State Estimation Simulator
+# This file controls the main functionality of the state estimation data generation
 
 import numpy as np
 import rocket_math as rm
@@ -107,8 +107,8 @@ def time_update():
 
     new_data_gt = np.array([current_rocket.position_loc_cart, current_rocket.velocity, current_rocket.acceleration])  # position is in local cartesian for testing purposes
     data_gt = ["", "", ""]
-    for i, data_ele_gt in enumerate(new_data_gt):
-        data_gt[i] = np.array2string(data_ele_gt, precision=3)
+    for i, data_elem_gt in enumerate(new_data_gt):
+        data_gt[i] = np.array2string(data_elem_gt, precision=3)
     data_to_write = ' '.join(["{0: <33}".format(data) for data in data_gt])
     ground_truth.write(data_to_write + "\n")
     sensor_data.write('')  # Add what is being written to sensor_data file here
@@ -118,8 +118,8 @@ def time_update():
 # Initializing files being writen to and main loop for recording data
 with open("ground_truth.txt", "w") as ground_truth:
     with open("sensor_data.txt", "w") as sensor_data:
-        headings_gt = ["Position_ENU", "Velocity", "Acceleration", "Orientation"]
-        headings_sd = ["Baro_Pressure", "Temperature", "Acceleration", "Angular_Rates", "Magnetic Field"]
+        headings_gt = ["Position_ENU\t", "Velocity\t", "Acceleration\t", "Orientation\t"]
+        headings_sd = ["Baro_Pressure\t", "Temperature\t", "Acceleration\t", "Angular_Rates\t", "Magnetic Field\t"]
         for (heading_gt, heading_sd) in zip(headings_gt, headings_sd):
             col_titles_gt = heading_gt.split()
             col_titles_sd = heading_sd.split()
