@@ -24,7 +24,7 @@ def init_rocket_state() -> rm.Rocket:
     # except:
 
     # try:
-    pressure_noise, temp_noise, accel_noise, mag_noise = input(
+    pressure_noise, temp_noise, accel_noise, gyro_noise, mag_noise = input(
             "Enter noise params (pressure, temperature, "
             "acceleration, gyro, and magnetic noise):"
             " ").split()
@@ -32,11 +32,12 @@ def init_rocket_state() -> rm.Rocket:
 
     current_rocket.mass["total_mass"] = total_mass
     current_rocket.mass["comb_mass"] = total_mass - current_rocket.mass["body_mass"]
-    current_rocket.thrust[2] = thrust
+    current_rocket.thrust[2] = thrust   # thrust[2] since it is initially completely vertical when considering angle of 90
     current_rocket.burn_time = float(burn_time)
     current_rocket.sensor_noise["pressure_noise"] = pressure_noise
     current_rocket.sensor_noise["temp_noise"] = temp_noise
     current_rocket.sensor_noise["accel_noise"] = accel_noise
+    current_rocket.sensor_noise["gyro_noise"] = gyro_noise
     current_rocket.sensor_noise["mag_noise"] = mag_noise
     return current_rocket
 
@@ -45,15 +46,15 @@ def init_rocket_state() -> rm.Rocket:
 # TODO: add writing to sensor_data files
 def time_update(rocket: rm.Rocket, gt_file, sd_file, time_dict):
     # TODO: consider making previous_time and current_time 1 variable
-    rocket.thrust = rm.get_thrust(rocket, time_dict["current_time"])
-    rocket.position_loc_cart = rm.rocket_position_local_cartesian(rocket, time_dict["previous_time"], time_dict["current_time"])
-    rocket.position_enu = rm.loc_cart_to_enu_2(rocket, time_dict["previous_time"], time_dict["current_time"])  # position should calculated first
-    rocket.velocity = rm.rocket_velocity(rocket, time_dict["previous_time"], time_dict["current_time"])
-    rocket.acceleration = rm.rocket_acceleration(rocket, time_dict["previous_time"], time_dict["current_time"])
-    rocket.altitude = rocket.position_loc_cart[2]
-    rocket.mass = rm.get_mass(rocket)
+    rocket.thrust = rm.get_thrust(time_dict["current_time"])
+    rocket.position_cart = rm.rocket_position_local_cartesian(time_dict["previous_time"], time_dict["current_time"])
+    rocket.position_enu = rm.loc_cart_to_enu_2(time_dict["previous_time"], time_dict["current_time"])  # position should calculated first
+    rocket.velocity = rm.rocket_velocity(time_dict["previous_time"], time_dict["current_time"])
+    rocket.acceleration = rm.rocket_acceleration(time_dict["previous_time"], time_dict["current_time"])
+    rocket.altitude = rocket.position_cart[2]
+    rocket.mass = rm.get_mass()
 
-    new_data_gt = np.array([rocket.position_loc_cart, rocket.velocity, rocket.acceleration])  # position is in local cartesian for testing purposes
+    new_data_gt = np.array([rocket.position_cart, rocket.velocity, rocket.acceleration])  # position is in local cartesian for testing purposes
     data_gt = ["", "", ""]
     for i, data_elem_gt in enumerate(new_data_gt):
         data_gt[i] = np.array2string(data_elem_gt, precision=3)
@@ -101,3 +102,6 @@ def main():
         sensor_data.close()
     ground_truth.close()
 
+
+if __name__ == "__main__":
+    main()
