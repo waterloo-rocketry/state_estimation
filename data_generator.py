@@ -36,8 +36,8 @@ def init_rocket_state() -> rm.Rocket:
         {"press_noise": 0, "temp_noise": 0, "accel_noise": 0,
          "gyro_noise": 0,
          "mag_noise": 0})
-    total_mass, thrust, burn_time, press_noise, temp_noise, accel_noise, \
-        gyro_noise, mag_noise = 0, 0, 0, 0, 0, 0, 0, 0
+    total_mass = thrust = burn_time = press_noise = temp_noise = \
+        accel_noise = gyro_noise = mag_noise = 0
     valid_user_input = False
     while not valid_user_input:
         total_mass, thrust, burn_time, press_noise, temp_noise, accel_noise, \
@@ -50,7 +50,6 @@ def init_rocket_state() -> rm.Rocket:
         thrust = np.fromstring(thrust, dtype=float, sep=",")
         burn_time = float(burn_time)
         if total_mass < 0 or burn_time < 0 or is_any_negative(thrust):
-            valid_user_input = False
             print(
                 "User input is invalid. Reason: one or more inputs required "
                 "to be positive, is negative. Please try again.")

@@ -82,11 +82,10 @@ class Rocket:
     altitude: float
 
     """
-    def __init__(self, mass, thrust, burn_time, sensor_noise):
+    def __init__(self, mass=None, thrust=np.array([0, 0, 0]), burn_time=0,
+                 sensor_noise=None):
         """
         Initialize a Rocket.
-
-        Note: A Rocket object cannot be created empty.
 
         Parameters
         ----------
@@ -95,6 +94,12 @@ class Rocket:
         burn_time: float
         sensor_noise: dict
         """
+        if mass is None:
+            mass = {"total_mass": 0, "body_mass": 0, "comb_mass": 0}
+        if sensor_noise is None:
+            sensor_noise = {"press_noise": 0, "temp_noise": 0,
+                            "accel_noise": 0, "gyro_noise": 0,
+                            "mag_noise": 0}
         self.mass = mass  # [lb]  # TODO: add explanation for dict
         self.thrust = thrust  # [lbf]
         self.burn_time = burn_time  # [s]
@@ -156,8 +161,7 @@ class Rocket:
                    and self.baro_pressure == other.baro_pressure \
                    and self.temperature == other.temperature \
                    and self.altitude == other.altitude
-        else:
-            return False
+        return False
 
     # Calculates magnitude of gravity based on altitude above sea level
     # (ft/s^2)
@@ -200,7 +204,7 @@ class Rocket:
     # Alternative to other air density calculation [soon to be deprecated]
     def rocket_air_density(self) -> float:
         alt = self.altitude
-        return 1.22 * 0.9 ** (alt / 1000)
+        return 1.22 * (0.9 ** (alt / 1000))
 
     # TODO [Later]: if speeds of rocket are transonic/supersonic, wave drag
     #  may be a thing to consider
