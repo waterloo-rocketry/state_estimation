@@ -62,21 +62,21 @@ DECIMALS = 4
 # TODO: determine when rounding should occur
 class Rocket:
     """
-    A class used to represent a Rocket.
+    A class used to represent a Rocket object.
 
     ...
 
     Attributes
     ----------
-    mass: dict
-    thrust: np.array
+    mass: dict of {str : float}
+    thrust: numpy.ndarray
     burn_time: float
-    sensor_noise: dict
-    position: np.array
-    position_enu: np.array
-    velocity: np.array
-    acceleration: np.array
-    orientation: dict
+    sensor_noise: dict of {str : float}
+    position: numpy.ndarray
+    position_enu: numpy.ndarray
+    velocity: numpy.ndarray
+    acceleration: numpy.ndarray
+    orientation: None
     baro_pressure: float
     temperature: float
     altitude: float
@@ -89,10 +89,10 @@ class Rocket:
 
         Parameters
         ----------
-        mass: dict
-        thrust: np.array
+        mass: dict of {str : float}
+        thrust: numpy.ndarray
         burn_time: float
-        sensor_noise: dict
+        sensor_noise: dict of {str : float}
         """
         if mass is None:
             mass = {"total_mass": 0, "body_mass": 0, "comb_mass": 0}
@@ -116,12 +116,22 @@ class Rocket:
     def __repr__(self):
         """
         'Normal' string representation of Rocket object in concise form.
+
+        Returns
+        -------
+        str
+            Bare bones Rocket object.
         """
         return str(self.__class__) + ":" + str(self.__dict__)
 
     def __str__(self):
         """
         'Pretty' string representation of Rocket object.
+
+        Returns
+        -------
+        str
+            Human-readable/formatted Rocket object.
         """
         return f"Rocket object:\n\t\tINPUTS\n\tMass:\n\t{{\n\t\t" \
                f"Total Mass:\t{self.mass['total_mass']}\n\t\tBody Mass:\t" \
@@ -145,7 +155,18 @@ class Rocket:
 
     def __eq__(self, other):
         """
-        Equality method for comparing two Rocket objects
+        Equality method for comparing if two Rocket objects are the equal.
+
+        Parameters
+        ----------
+        other
+                Object to be compared against.
+
+        Returns
+        -------
+        bool
+            True if both objects are Rocket objects and equal, false if
+            otherwise.
         """
         if type(self) == type(
                 other):
@@ -163,14 +184,29 @@ class Rocket:
                    and self.altitude == other.altitude
         return False
 
-    # Calculates magnitude of gravity based on altitude above sea level
-    # (ft/s^2)
     def rocket_gravity(self) -> float:
+        """
+        Calculates the magnitude of gravity experienced by the Rocket object
+        based on altitude above sea level.
+
+        Returns
+        -------
+        float
+            Number representing magnitude of gravity in ft/s^2.
+        """
         return SA_GRAV_GROUND * (
                 (RAD_EARTH / (RAD_EARTH + self.altitude)) ** 2)
 
-    # Calculates mass based on estimated loss in mass (in lb)
     def rocket_mass(self) -> dict:
+        """
+        Calculates the mass of the Rocket object based on the estimated loss
+        in mass.
+
+        Returns
+        -------
+        self.mass: dict
+            Updated mass dict of {str: float} in lbs.
+        """
         if self.mass["comb_mass"] != 0:
             if self.mass["comb_mass"] - MASS_LOSS < 0:
                 self.mass["comb_mass"] = 0
@@ -182,19 +218,28 @@ class Rocket:
                     "comb_mass"]
         return self.mass
 
-    # Calculates the magnitude of the velocity vector [ft/s]
     def rocket_velocity_mag(self) -> float:
+        """
+        Calculates the magnitude of the velocity vector.
+
+        Returns
+        -------
+        float
+            Number representing the magnitude of the velocity vector in ft/s.
+        """
         return np.linalg.norm(self.velocity)
 
-    # Calculates the velocity unit vector
-    # Launch angle is in degrees and is from the x-axis to the z-axis
-    # TODO: investigate numpy unit vector
-    # TODO: fix the fact the unit vector is negative and switches sign
     def rocket_velocity_uv(self) -> np.array([]):
+        """
+        Calculates the velocity unit vector.
+
+        Returns
+        -------
+        numpy.ndarray
+            Numpy array (containing data with float type) representing the
+            unit vector for the velocity vector.
+        """
         if not self.rocket_velocity_mag():
-            # multiplier_arr = np.array([round(cos(radians(TOWER_ANGLE)), 4),
-            # 0.0, round(sin(radians(TOWER_ANGLE)), 4)])
-            # return np.array([1.0, 0.0, 1.0]) * multiplier_arr
             return np.array([0, 0, 0])
         return self.velocity / np.linalg.norm(self.velocity)
 
@@ -208,17 +253,38 @@ class Rocket:
 
     # TODO [Later]: if speeds of rocket are transonic/supersonic, wave drag
     #  may be a thing to consider
-    # Calculates the drag force experienced by the rocket in local cartesian
-    # vector form (x,y,z) [ft]
     def rocket_drag_force(self) -> np.array([]):
+        """
+        Calculates the drag force experienced by the Rocket object in the local
+        cartesian vector form.
+
+        Returns
+        -------
+        numpy.ndarray
+            Numpy array (containing data with float type) representing the
+            drag force experienced by the Rocket object in lbf.
+        """
         drag_force_mag = 0.5 * COEFF_DRAG * (
                 self.rocket_velocity_mag() ** 2) * self.rocket_air_density() \
                          * CROSS_SEC_AREA
         return np.around(self.rocket_velocity_uv() * drag_force_mag, DECIMALS)
 
-    # TODO: implement burn time
-    # Calculates the thrust vector based on velocity unit vector (x,y,z) [lbf]
     def rocket_thrust(self, current_time: float) -> np.array([]):
+        """
+        Calculates the thrust vector of the Rocket object based on the
+        velocity unit vector.
+
+        Parameters
+        ----------
+        current_time : float
+            The current time of the rocket flight in seconds.
+
+        Returns
+        -------
+        numpy.ndarray
+            Numpy array (containing data with float type) representing the
+            thrust generated by the Rocket object in lbf.
+        """
         if np.all(self.rocket_velocity_mag() == np.array([0, 0, 0])):
             return self.thrust
         elif current_time <= self.burn_time:
@@ -229,10 +295,17 @@ class Rocket:
                              DECIMALS)  # TODO: account for launch angle
         return np.array([0, 0, 0])
 
-    # Calculates acceleration of the rocket in local cartesian vector form
-    # (x,y,z) [ft/s^2]
-    # TODO: check units for every variable
     def rocket_acceleration(self) -> np.array([]):
+        """
+        Calculates the accleration of the Rocket object in local cartesian
+        vector form.
+
+        Returns
+        -------
+        numpy.ndarray
+            Numpy array (containing data with float type) representing the
+            acceleration of the Rocket object in ft/s^2.
+        """
         resultant_force = np.array([0.0, 0.0, 0.0])
         drag_force = self.rocket_drag_force()
         resultant_force[0] = self.thrust[0] - drag_force[0]
@@ -244,20 +317,52 @@ class Rocket:
                              DECIMALS)
         return np.around(self.acceleration, DECIMALS)
 
-    # Calculates velocity of the rocket by integrating acceleration in local
-    # cartesian vector form (x,y,z) [ft/s]
     def rocket_velocity(self, current_time, previous_time) -> np.array([]):
+        """
+        Calculates the velocity vector of the Rocket object in local cartesian
+        vector form.
+
+        Parameters
+        ----------
+        current_time : float
+            The current time of the rocket flight in seconds.
+        previous_time : float
+            The previous time (by 1 timestep) of the rocket flight in seconds.
+
+        Returns
+        -------
+        numpy.ndarray
+            Numpy array (containing data with float type) representing the
+            velocity of the Rocket object in ft/s.
+        """
         return np.around(
             self.velocity + self.acceleration * (current_time - previous_time),
             DECIMALS)
 
-    # TODO: add functionality
-    # Calculated position of the rocket by integrating velocity in the local
-    # cartesian vector form (x,y,z) [ft]
     def rocket_position(self, current_time, previous_time) -> np.array([]):
+        """
+        Calculates the position vector of the Rocket object in local cartesian
+        vector form.
+
+        Parameters
+        ----------
+        current_time : float
+            The current time of the rocket flight in seconds.
+        previous_time : float
+            The previous time (by 1 timestep) of the rocket flight in seconds.
+
+        Returns
+        -------
+        numpy.ndarray
+            Numpy array (containing data with float type) representing the
+            position of the Rocket object in ft.
+        """
         position = np.around(
             self.position + self.velocity * (current_time - previous_time),
             DECIMALS)
+
+        # Check if position is negative (since rocket launch is from ground,
+        # it should always be >= 0)
         if position[2] < 0:
             position[2] = 0
         return position
