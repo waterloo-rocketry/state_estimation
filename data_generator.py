@@ -11,7 +11,7 @@ import rocket_math as rm
 
 # -----------------------CONSTANTS---------------------------
 # File Paths:
-ROOT_PATH = os.path.dirname(os.path.abspath("requirements.txt"))
+ROOT_PATH = os.path.dirname(os.path.abspath("__file__"))
 GT_PATH = os.path.join(ROOT_PATH, "generated_files", "ground_truth.txt")
 SD_PATH = os.path.join(ROOT_PATH, "generated_files", "sensor_data.txt")
 
@@ -47,13 +47,8 @@ def init_rocket_state() -> rm.Rocket:
     current_rocket : Rocket
         Rocket object to be used to generate data sets based on user input.
     """
-    # Initializing the current rocket
-    current_rocket = rm.Rocket(
-        {"total_mass": 0, "body_mass": rm.BODY_MASS, "comb_mass": 0},
-        np.array([0, 0, 0]), 0,
-        {"press_noise": 0, "temp_noise": 0, "accel_noise": 0,
-         "gyro_noise": 0,
-         "mag_noise": 0})
+    # Get user input
+
     total_mass = thrust = burn_time = press_noise = temp_noise = \
         accel_noise = gyro_noise = mag_noise = 0
     valid_user_input = False
@@ -73,17 +68,14 @@ def init_rocket_state() -> rm.Rocket:
                 "to be positive, is negative. Please try again.")
         else:
             valid_user_input = True
-    current_rocket.mass["total_mass"] = total_mass
-    current_rocket.mass["comb_mass"] = total_mass - current_rocket.mass[
-        "body_mass"]
-    current_rocket.thrust = thrust
-    current_rocket.burn_time = burn_time
-    current_rocket.sensor_noise["press_noise"] = float(press_noise)
-    current_rocket.sensor_noise["temp_noise"] = float(temp_noise)
-    current_rocket.sensor_noise["accel_noise"] = float(accel_noise)
-    current_rocket.sensor_noise["gyro_noise"] = float(gyro_noise)
-    current_rocket.sensor_noise["mag_noise"] = float(mag_noise)
-    return current_rocket
+
+    return rm.Rocket({"total_mass": total_mass, "body_mass": rm.BODY_MASS,
+                      "comb_mass": total_mass - rm.BODY_MASS},
+                     thrust, burn_time, {"press_noise": float(press_noise),
+                                         "temp_noise": float(temp_noise),
+                                         "accel_noise": float(accel_noise),
+                                         "gyro_noise": float(gyro_noise),
+                                         "mag_noise": float(mag_noise)})
 
 
 # TODO: add sensor updates
@@ -98,14 +90,14 @@ def time_update(rocket, time_dict):
     time_dict : dict of {str : float}
         Stores the time attributes in the data generation process.
     """
-    rocket.thrust = rocket.rocket_thrust(time_dict["current_time"])
-    rocket.acceleration = rocket.rocket_acceleration()
-    rocket.velocity = rocket.rocket_velocity(time_dict["current_time"],
+    rocket.thrust = rocket.update_thrust(time_dict["current_time"])
+    rocket.acceleration = rocket.update_acceleration()
+    rocket.velocity = rocket.update_velocity(time_dict["current_time"],
                                              time_dict["previous_time"])
-    rocket.position = rocket.rocket_position(time_dict["current_time"],
+    rocket.position = rocket.update_position(time_dict["current_time"],
                                              time_dict["previous_time"])
     rocket.altitude = rocket.position[2]
-    rocket.mass = rocket.rocket_mass()
+    rocket.mass = rocket.update_mass()
 
 
 # TODO: add writing to sensor_data files once sensor methods are implemented
@@ -172,9 +164,6 @@ def main():
                 write_data_to_file(current_rocket, ground_truth, sensor_data)
                 time_dict["previous_time"] = time_dict["current_time"]
                 time_dict["current_time"] += timestep
-
-        sensor_data.close()
-    ground_truth.close()
 
 
 if __name__ == "__main__":
