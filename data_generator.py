@@ -24,7 +24,7 @@ def is_any_negative(array):
 
     Parameters
     ----------
-    array : numpy.ndarray
+    array: numpy.ndarray
 
     Returns
     -------
@@ -44,7 +44,7 @@ def init_rocket_state() -> rm.Rocket:
 
     Returns
     -------
-    current_rocket : Rocket
+    current_rocket: Rocket
         Rocket object to be used to generate data sets based on user input.
     """
     # Get user input
@@ -85,9 +85,9 @@ def time_update(rocket, time_dict):
 
     Parameters
     ----------
-    rocket : Rocket
+    rocket: Rocket
         Rocket object to update.
-    time_dict : dict of {str : float}
+    time_dict: dict of {str : float}
         Stores the time attributes in the data generation process.
     """
     rocket.thrust = rocket.update_thrust(time_dict["current_time"])
@@ -107,9 +107,9 @@ def write_data_to_file(rocket, gt_file, sd_file):
 
     Parameters
     ----------
-    rocket : Rocket
+    rocket: Rocket
         Rocket object with info to write to file.
-    gt_file : io.TestIOWrapper
+    gt_file: io.TestIOWrapper
         ground_truth file to write Rocket info to.
     sd_file
         sensor_data file to write Rocket info to.

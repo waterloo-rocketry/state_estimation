@@ -51,7 +51,8 @@ def test_gravity_at_float_num_ft():
 # Testing functions for update_mass().
 def test_update_mass_above_mass_loss_threshold():
     """
-    Test update_mass() for mass above the mass loss threshold from one timestep.
+    Test update_mass() for mass above the mass loss threshold from one
+    timestep.
     """
     test_rocket = rm.Rocket()
     test_rocket.mass = {"total_mass": 110, "body_mass": 55, "comb_mass": 55}
@@ -67,7 +68,8 @@ def test_update_mass_above_mass_loss_threshold():
 
 def test_update_mass_below_mass_loss_threshold():
     """
-    Test update_mass() for mass below the mass threshold loss from one timestep.
+    Test update_mass() for mass below the mass threshold loss from one
+    timestep.
     """
     test_rocket = rm.Rocket()
     test_rocket.mass = {"total_mass": 100 + rm.MASS_LOSS - 0.01,
