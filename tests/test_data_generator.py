@@ -310,6 +310,3 @@ def test_full_length_write():
     gt_test_file.close()
     sd_test_file.close()
     assert gt_file_value == valid
-
-
-

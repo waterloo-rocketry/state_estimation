@@ -90,14 +90,22 @@ def time_update(rocket, time_dict):
     time_dict: dict of {str : float}
         Stores the time attributes in the data generation process.
     """
-    rocket.position = rocket.update_position(time_dict["current_time"]
-                                             - time_dict["previous_time"])
-    rocket.velocity = rocket.update_velocity(time_dict["current_time"]
-                                             - time_dict["previous_time"])
-    rocket.acceleration = rocket.update_acceleration()
-    rocket.thrust = rocket.update_thrust(time_dict["current_time"])
+    # Calculate updated state from previous timestep's state
+    updated_position = rocket.update_position(time_dict["current_time"]
+                                              - time_dict["previous_time"])
+    updated_velocity = rocket.update_velocity(time_dict["current_time"]
+                                              - time_dict["previous_time"])
+    updated_acceleration = rocket.update_acceleration()
+    updated_thrust = rocket.update_thrust(time_dict["current_time"])
+    updated_mass = rocket.update_mass(time_dict["timestep"])
+
+    # Update the Rocket object
+    rocket.position = updated_position
+    rocket.velocity = updated_velocity
+    rocket.acceleration = updated_acceleration
+    rocket.thrust = updated_thrust
     rocket.altitude = rocket.position[2]
-    rocket.mass = rocket.update_mass(time_dict["timestep"])
+    rocket.mass = updated_mass
 
 
 # TODO: add writing to sensor_data files once sensor methods are implemented

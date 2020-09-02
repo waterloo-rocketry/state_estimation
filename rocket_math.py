@@ -219,19 +219,21 @@ class Rocket:
         Calculates the mass of the Rocket object based on the estimated loss
         in mass.
 
+        Parameters
+        ----------
+        timestep: float
+            The time interval for which generator will progress during next
+            "step".
+
         Returns
         -------
         dict
             Updated mass dict of {str: float} in lbs.
         """
         mass = self.mass
-        if self.mass["prop_mass"] != 0:
-            if self.mass["prop_mass"] - (MASS_LOSS * timestep) < 0:
-                mass["total_mass"] = mass["body_mass"]
-                mass["prop_mass"] = 0
-            else:
-                mass["prop_mass"] = mass["prop_mass"] - (MASS_LOSS * timestep)
-                mass["total_mass"] = mass["body_mass"] + mass["prop_mass"]
+        mass["prop_mass"] = max(0, mass["prop_mass"] - (MASS_LOSS * timestep))
+        mass["total_mass"] = mass["body_mass"] + mass["prop_mass"]
+
         return mass
 
     def speed(self) -> float:
