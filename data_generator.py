@@ -11,7 +11,7 @@ import rocket_math as rm
 
 # -----------------------CONSTANTS---------------------------
 # File Paths:
-ROOT_PATH = os.path.dirname(os.path.abspath("__file__"))
+ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 GT_PATH = os.path.join(ROOT_PATH, "generated_files", "ground_truth.txt")
 SD_PATH = os.path.join(ROOT_PATH, "generated_files", "sensor_data.txt")
 
@@ -70,7 +70,7 @@ def init_rocket_state() -> rm.Rocket:
             valid_user_input = True
 
     return rm.Rocket({"total_mass": total_mass, "body_mass": rm.BODY_MASS,
-                      "comb_mass": total_mass - rm.BODY_MASS},
+                      "prop_mass": total_mass - rm.BODY_MASS},
                      thrust, burn_time, {"press_noise": float(press_noise),
                                          "temp_noise": float(temp_noise),
                                          "accel_noise": float(accel_noise),
@@ -90,14 +90,14 @@ def time_update(rocket, time_dict):
     time_dict: dict of {str : float}
         Stores the time attributes in the data generation process.
     """
-    rocket.thrust = rocket.update_thrust(time_dict["current_time"])
+    rocket.position = rocket.update_position(time_dict["current_time"]
+                                             - time_dict["previous_time"])
+    rocket.velocity = rocket.update_velocity(time_dict["current_time"]
+                                             - time_dict["previous_time"])
     rocket.acceleration = rocket.update_acceleration()
-    rocket.velocity = rocket.update_velocity(time_dict["current_time"],
-                                             time_dict["previous_time"])
-    rocket.position = rocket.update_position(time_dict["current_time"],
-                                             time_dict["previous_time"])
+    rocket.thrust = rocket.update_thrust(time_dict["current_time"])
     rocket.altitude = rocket.position[2]
-    rocket.mass = rocket.update_mass()
+    rocket.mass = rocket.update_mass(time_dict["timestep"])
 
 
 # TODO: add writing to sensor_data files once sensor methods are implemented
@@ -111,7 +111,7 @@ def write_data_to_file(rocket, gt_file, sd_file):
         Rocket object with info to write to file.
     gt_file: io.TestIOWrapper
         ground_truth file to write Rocket info to.
-    sd_file
+    sd_file: io.TestIOWrapper
         sensor_data file to write Rocket info to.
     """
     new_data_gt = np.array(
@@ -132,8 +132,8 @@ def main():
     Main function for generating data based on the input Rocket.
     """
     # Timestep setup
-    timestep = 0.01
-    time_dict = {"current_time": 0, "previous_time": 0, "end_time": 100}
+    time_dict = {"current_time": 0, "previous_time": 0, "end_time": 100,
+                 "timestep": 0.01}
 
     with open(GT_PATH, "w") as ground_truth:
         with open(SD_PATH, "w") as sensor_data:
@@ -158,12 +158,12 @@ def main():
             ground_truth.write("\n")
             sensor_data.write("\n")
 
-            # time_update()
+            # Update state and write data to file
             while time_dict["current_time"] < time_dict["end_time"]:
                 time_update(current_rocket, time_dict)
                 write_data_to_file(current_rocket, ground_truth, sensor_data)
                 time_dict["previous_time"] = time_dict["current_time"]
-                time_dict["current_time"] += timestep
+                time_dict["current_time"] += time_dict["timestep"]
 
 
 if __name__ == "__main__":

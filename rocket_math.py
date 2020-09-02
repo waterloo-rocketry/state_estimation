@@ -35,7 +35,7 @@ RAD_EARTH = 20.902e6
 # Body mass of the rocket (AKA non-fuel related mass) [lb]
 BODY_MASS = 55  # currently arbitrary
 
-# Mass lost per timestep [lb/timestep]
+# Mass lost per second [lb/s]
 # TODO: implement the proper loss
 MASS_LOSS = 0.05
 
@@ -57,7 +57,6 @@ DECIMALS = 4
 
 # TODO: add function docstrings
 # TODO: finish filling in class docstrings
-# TODO: determine when rounding should occur
 class Rocket:
     """
     A class used to represent a Rocket object.
@@ -92,9 +91,9 @@ class Rocket:
 
         mass: dict of {str : float}
             mass is a dict of {"total_mass": float, "body_mass": float,
-            "comb_mass": float} where "total_mass" represents the total mass
+            "prop_mass": float} where "total_mass" represents the total mass
             of the rocket, "body_mass" represents the mass of the body of the
-            rocket (without the combustible mass), and "comb_mass" represents
+            rocket (without the combustible mass), and "prop_mass" represents
             the mass of the combustible materials in the rocket (i.e. oxidizer,
             fuel).
 
@@ -103,7 +102,7 @@ class Rocket:
             a flight.
 
         burn_time: float
-            burn_time is the amount of time the Rocket generates thrust
+            burn_time is the amount of time the Rocket generates thrust.
 
         sensor_noise: dict of {str : float}
             sensor_noise is a dict of {"press_noise": float, "temp_noise":
@@ -114,7 +113,7 @@ class Rocket:
             magnetometer noise.
         """
         if mass is None:
-            mass = {"total_mass": 0, "body_mass": 0, "comb_mass": 0}
+            mass = {"total_mass": 0, "body_mass": 0, "prop_mass": 0}
         if sensor_noise is None:
             sensor_noise = {"press_noise": 0, "temp_noise": 0,
                             "accel_noise": 0, "gyro_noise": 0,
@@ -155,7 +154,7 @@ class Rocket:
         return f"Rocket object:\n\t\tINPUTS\n\tMass:\n\t{{\n\t\t" \
                f"Total Mass:\t{self.mass['total_mass']}\n\t\tBody Mass:\t" \
                f"{self.mass['body_mass']}\n\t\tComb Mass:\t" \
-               f"{self.mass['comb_mass']}\n\t}}\n\tThrust:\t\t" \
+               f"{self.mass['prop_mass']}\n\t}}\n\tThrust:\t\t" \
                f"{self.thrust}\n\tBurn Time:\t" \
                f"{self.burn_time}\n\tSensor Noise:\n\t{{\n\t\tPressure:\t" \
                f"{self.sensor_noise['press_noise']}\n\t\tTemperature:\t" \
@@ -215,7 +214,7 @@ class Rocket:
         return SA_GRAV_GROUND * (
                 (RAD_EARTH / (RAD_EARTH + self.altitude)) ** 2)
 
-    def update_mass(self) -> dict:
+    def update_mass(self, timestep) -> dict:
         """
         Calculates the mass of the Rocket object based on the estimated loss
         in mass.
@@ -225,16 +224,15 @@ class Rocket:
         dict
             Updated mass dict of {str: float} in lbs.
         """
-        if self.mass["comb_mass"] != 0:
-            if self.mass["comb_mass"] - MASS_LOSS < 0:
-                self.mass["comb_mass"] = 0
-                self.mass["total_mass"] = self.mass["body_mass"]
+        mass = self.mass
+        if self.mass["prop_mass"] != 0:
+            if self.mass["prop_mass"] - (MASS_LOSS * timestep) < 0:
+                mass["total_mass"] = mass["body_mass"]
+                mass["prop_mass"] = 0
             else:
-                self.mass["comb_mass"] = round(
-                    self.mass["comb_mass"] - MASS_LOSS, DECIMALS)
-                self.mass["total_mass"] = self.mass["body_mass"] + self.mass[
-                    "comb_mass"]
-        return self.mass
+                mass["prop_mass"] = mass["prop_mass"] - (MASS_LOSS * timestep)
+                mass["total_mass"] = mass["body_mass"] + mass["prop_mass"]
+        return mass
 
     def speed(self) -> float:
         """
@@ -287,6 +285,7 @@ class Rocket:
         return self.velocity_uv() * drag_force_mag
 
     # TODO: account for launch angle
+    # TODO: determine thrust unit vector through orientation
     def update_thrust(self, current_time: float) -> np.array([]):
         """
         Calculates the thrust vector of the Rocket object based on the
@@ -327,21 +326,19 @@ class Rocket:
         resultant_force[2] = self.thrust[2] - drag_force[2] - (
                 self.mass["total_mass"] * self.gravity())
         if any(resultant_force):
-            return np.around(resultant_force / self.mass["total_mass"],
-                             DECIMALS)
-        return np.around(self.acceleration, DECIMALS)
+            return resultant_force / self.mass["total_mass"]
+        return self.acceleration
 
-    def update_velocity(self, current_time, previous_time) -> np.array([]):
+    def update_velocity(self, delta_time) -> np.array([]):
         """
         Calculates the velocity vector of the Rocket object in local cartesian
         vector form.
 
         Parameters
         ----------
-        current_time: float
-            The current time of the rocket flight in seconds.
-        previous_time: float
-            The previous time (by 1 timestep) of the rocket flight in seconds.
+        delta_time: float
+            The change in time since the last update of rocket flight in
+            seconds.
 
         Returns
         -------
@@ -349,21 +346,18 @@ class Rocket:
             Numpy array (containing data with float type) representing the
             velocity of the Rocket object in ft/s.
         """
-        return np.around(
-            self.velocity + self.acceleration * (current_time - previous_time),
-            DECIMALS)
+        return self.velocity + self.acceleration * delta_time
 
-    def update_position(self, current_time, previous_time) -> np.array([]):
+    def update_position(self, delta_time) -> np.array([]):
         """
         Calculates the position vector of the Rocket object in local cartesian
         vector form.
 
         Parameters
         ----------
-        current_time: float
-            The current time of the rocket flight in seconds.
-        previous_time: float
-            The previous time (by 1 timestep) of the rocket flight in seconds.
+        delta_time: float
+            The change in time since the last update of rocket flight in
+            seconds.
 
         Returns
         -------
@@ -371,9 +365,7 @@ class Rocket:
             Numpy array (containing data with float type) representing the
             position of the Rocket object in ft.
         """
-        position = np.around(
-            self.position + self.velocity * (current_time - previous_time),
-            DECIMALS)
+        position = self.position + self.velocity * delta_time
 
         # Check if position is negative (since rocket launch is from ground,
         # it should always be >= 0)

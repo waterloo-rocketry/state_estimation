@@ -6,46 +6,51 @@ import rocket_math as rm
 
 '''
 Notes:
-- For all calculations, there will be an arbitrary 4 decimal places max.
+- For all calculations, there will be an tolerance of 0.001.
 - No rocket_air_density unit test since the current method for
-determining/testing air density needs to be changed.
+  determining/testing air density needs to be changed.
 '''
+# -----------------------CONSTANTS---------------------------
+TOLERANCE = 0.001
+
+
+# -----------------------------------------------------------
 
 
 # Testing functions for gravity().
 def test_gravity_at_ground():
     test_rocket = rm.Rocket()
-    assert np.around(test_rocket.gravity(), 4) == 32.1389
+    assert abs(test_rocket.gravity() - 32.1389) <= TOLERANCE
 
 
 def test_gravity_at_100_ft():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 100
-    assert np.around(test_rocket.gravity(), 4) == 32.1386
+    assert abs(test_rocket.gravity() - 32.1386) <= TOLERANCE
 
 
 def test_gravity_at_1000_ft():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 1000
-    assert np.around(test_rocket.gravity(), 4) == 32.1358
+    assert abs(test_rocket.gravity() - 32.1358) <= TOLERANCE
 
 
 def test_gravity_at_10000_ft():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 10000
-    assert np.around(test_rocket.gravity(), 4) == 32.1082
+    assert abs(test_rocket.gravity() - 32.1082) <= TOLERANCE
 
 
 def test_gravity_at_100000_ft():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 100000
-    assert np.around(test_rocket.gravity(), 4) == 31.8336
+    assert abs(test_rocket.gravity() - 31.8336) <= TOLERANCE
 
 
 def test_gravity_at_float_num_ft():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 5432.10
-    assert np.around(test_rocket.gravity(), 4) == 32.1222
+    assert abs(test_rocket.gravity() - 32.1222) <= TOLERANCE
 
 
 # Testing functions for update_mass().
@@ -54,16 +59,37 @@ def test_update_mass_above_mass_loss_threshold():
     Test update_mass() for mass above the mass loss threshold from one
     timestep.
     """
+    timestep = 1
     test_rocket = rm.Rocket()
-    test_rocket.mass = {"total_mass": 110, "body_mass": 55, "comb_mass": 55}
-    assert test_rocket.update_mass() == {"total_mass": 110 - rm.MASS_LOSS,
-                                         "body_mass": 55,
-                                         "comb_mass": 55 - rm.MASS_LOSS}
-    # Test again just to be sure it decreases properly.
-    assert test_rocket.update_mass() == {
-        "total_mass": 110 - (2 * rm.MASS_LOSS),
-        "body_mass": 55,
-        "comb_mass": 55 - (2 * rm.MASS_LOSS)}
+    test_rocket.mass = {"total_mass": 110, "body_mass": 55, "prop_mass": 55}
+    test_rocket.mass = test_rocket.update_mass(timestep)
+    expected_mass = {"total_mass": 110 - rm.MASS_LOSS * timestep,
+                     "body_mass": 55,
+                     "prop_mass": 55 - rm.MASS_LOSS * timestep}
+    assert all((test_rocket.mass[key] - expected_mass[key]) <= TOLERANCE
+               for key in test_rocket.mass)
+    # assert test_rocket.update_mass(timestep) == {
+    #    "total_mass": 110 - rm.MASS_LOSS * timestep,
+    #    "body_mass": 55,
+    #   "prop_mass": 55 - rm.MASS_LOSS * timestep}
+
+
+def test_secondary_update_mass_above_mass_loss_threshold():
+    """
+    Test update_mass() again for mass above the mass loss threshold from one
+    timestep to make sure mass decreases properly.
+    """
+    timestep = 1
+    test_rocket = rm.Rocket()
+    test_rocket.mass = {"total_mass": 110 - rm.MASS_LOSS * timestep,
+                        "body_mass": 55,
+                        "prop_mass": 55 - rm.MASS_LOSS * timestep}
+    test_rocket.mass = test_rocket.update_mass(timestep)
+    expected_mass = {"total_mass": 110 - (2 * rm.MASS_LOSS * timestep),
+                     "body_mass": 55,
+                     "prop_mass": 55 - (2 * rm.MASS_LOSS * timestep)}
+    assert all((test_rocket.mass[key] - expected_mass[key]) <= TOLERANCE
+               for key in test_rocket.mass)
 
 
 def test_update_mass_below_mass_loss_threshold():
@@ -71,14 +97,32 @@ def test_update_mass_below_mass_loss_threshold():
     Test update_mass() for mass below the mass threshold loss from one
     timestep.
     """
+    timestep = 1
     test_rocket = rm.Rocket()
     test_rocket.mass = {"total_mass": 100 + rm.MASS_LOSS - 0.01,
-                        "body_mass": 100, "comb_mass": rm.MASS_LOSS - 0.01}
-    assert test_rocket.update_mass() == {"total_mass": 100, "body_mass": 100,
-                                         "comb_mass": 0}
-    # Test again to be sure it doesn't decrease further.
-    assert test_rocket.update_mass() == {"total_mass": 100, "body_mass": 100,
-                                         "comb_mass": 0}
+                        "body_mass": 100, "prop_mass": rm.MASS_LOSS - 0.01}
+    test_rocket.mass = test_rocket.update_mass(timestep)
+    expected_mass = {"total_mass": 100,
+                     "body_mass": 100,
+                     "prop_mass": 0}
+    assert all((test_rocket.mass[key] - expected_mass[key]) <= TOLERANCE
+               for key in test_rocket.mass)
+
+
+def test_secondary_update_mass_below_mass_loss_threshold():
+    """
+    Test update_mass() again for mass below the mass loss threshold from one
+    timestep to make sure mass does not decrease.
+    """
+    timestep = 1
+    test_rocket = rm.Rocket()
+    test_rocket.mass = {"total_mass": 100, "body_mass": 100, "prop_mass": 0}
+    test_rocket.mass = test_rocket.update_mass(timestep)
+    expected_mass = {"total_mass": 100,
+                     "body_mass": 100,
+                     "prop_mass": 0}
+    assert all((test_rocket.mass[key] - expected_mass[key]) <= TOLERANCE
+               for key in test_rocket.mass)
 
 
 # Testing functions for speed().
@@ -185,8 +229,8 @@ def test_drag_with_positive_int_velocity(mocker):
                  return_value=np.array(
                      [(1 / np.sqrt(3)), (1 / np.sqrt(3)), (1 / np.sqrt(3))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.7204)
-    assert np.all(np.around(test_rocket.drag_force(), rm.DECIMALS) == np.array(
-        [0.0367, 0.0367, 0.0367]))  # hand calc
+    assert all((test_rocket.drag_force() - np.array(
+        [0.0367, 0.0367, 0.0367])) <= TOLERANCE)
 
 
 def test_drag_with_negative_int_velocity(mocker):
@@ -201,8 +245,8 @@ def test_drag_with_negative_int_velocity(mocker):
                  return_value=np.array([(-1 / np.sqrt(3)), (-1 / np.sqrt(3)),
                                         (-1 / np.sqrt(3))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.7204)
-    assert np.all(np.around(test_rocket.drag_force(), rm.DECIMALS) == np.array(
-        [-0.0367, -0.0367, -0.0367]))  # hand calc
+    assert all((test_rocket.drag_force() - np.array(
+        [-0.0367, -0.0367, -0.0367])) <= TOLERANCE)
 
 
 def test_drag_with_float_velocity(mocker):
@@ -218,8 +262,8 @@ def test_drag_with_float_velocity(mocker):
                      [(32.5 / np.sqrt(5618.75)), (42.5 / np.sqrt(5618.75)),
                       (52.5 / np.sqrt(5618.75))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.4254)
-    assert np.all(np.around(test_rocket.drag_force(), rm.DECIMALS) == np.array(
-        [30.5226, 39.9142, 49.3058]))  # hand calc
+    assert all((test_rocket.drag_force() - np.array(
+        [30.5226, 39.9142, 49.3058])) <= TOLERANCE)
 
 
 # Testing functions for update_thrust().
@@ -361,7 +405,7 @@ def test_update_acceleration_with_no_thrust_or_drag(mocker):
     test_rocket = rm.Rocket()
     # TODO: investigate why thrust = [1, 1, 1] when this isn't set
     test_rocket.thrust = np.array([0, 0, 0])
-    test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "comb_mass": 0.5}
+    test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "prop_mass": 0.5}
     mocker.patch('rocket_math.Rocket.drag_force',
                  return_value=np.array([0, 0, 0]))
     mocker.patch('rocket_math.Rocket.gravity',
@@ -376,7 +420,7 @@ def test_update_acceleration_with_constant_update_acceleration(mocker):
     (z component of thrust vector equals mass * gravity with no drag force).
     """
     test_rocket = rm.Rocket()
-    test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "comb_mass": 0.5}
+    test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "prop_mass": 0.5}
     test_rocket.thrust = np.array(
         [0, 0, test_rocket.mass["total_mass"] * 32.1389])
     test_rocket.acceleration = np.array([0, 0, 0])
@@ -393,7 +437,7 @@ def test_update_acceleration_with_pos_thrust_and_drag_ints(mocker):
     integers.
     """
     test_rocket = rm.Rocket()
-    test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "comb_mass": 0.5}
+    test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "prop_mass": 0.5}
     test_rocket.thrust = np.array([1, 1, 1])
     mocker.patch('rocket_math.Rocket.drag_force',
                  return_value=np.array([0.0622, 0.0622, 0.0622]))
@@ -409,7 +453,7 @@ def test_update_acceleration_with_neg_thrust_and_drag_ints(mocker):
     integers.
     """
     test_rocket = rm.Rocket()
-    test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "comb_mass": 0.5}
+    test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "prop_mass": 0.5}
     test_rocket.thrust = np.array([-1, -1, -1])
     mocker.patch('rocket_math.Rocket.drag_force',
                  return_value=np.array([-0.0622, -0.0622, -0.0622]))
@@ -425,14 +469,14 @@ def test_update_acceleration_with_thrust_and_drag_floats(mocker):
     """
     test_rocket = rm.Rocket()
     test_rocket.acceleration = np.array([0, 0, 0])
-    test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "comb_mass": 0.5}
+    test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "prop_mass": 0.5}
     test_rocket.thrust = np.array([10.5, 11.5, 12.5])
     mocker.patch('rocket_math.Rocket.drag_force',
                  return_value=np.array([7.5339, 8.2514, 8.9689]))
     mocker.patch('rocket_math.Rocket.gravity',
                  return_value=32.1389)
-    assert np.all(test_rocket.update_acceleration() == np.array(
-        [2.9661, 3.2486, -28.6078]))
+    assert np.all(test_rocket.update_acceleration() -
+                  np.array([2.9661, 3.2486, -28.6078])) <= TOLERANCE
 
 
 # Testing functions for update_velocity().
@@ -444,10 +488,9 @@ def test_update_velocity_with_no_vel_or_accel():
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([0, 0, 0])
     test_rocket.acceleration = np.array([0, 0, 0])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_velocity(current_time, previous_time) == np.array(
-            [0, 0, 0]))
+    delta_time = 1
+    assert np.all(test_rocket.update_velocity(delta_time) ==
+                  np.array([0, 0, 0]))
 
 
 def test_update_velocity_with_pos_int_vel_and_no_time_change():
@@ -458,10 +501,9 @@ def test_update_velocity_with_pos_int_vel_and_no_time_change():
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([1, 1, 1])
     test_rocket.acceleration = np.array([1, 1, 1])
-    current_time, previous_time = 0, 0
-    assert np.all(
-        test_rocket.update_velocity(current_time, previous_time) == np.array(
-            [1, 1, 1]))
+    delta_time = 0
+    assert np.all(test_rocket.update_velocity(delta_time) ==
+                  np.array([1, 1, 1]))
 
 
 def test_update_velocity_with_pos_vel_and_no_accel_ints():
@@ -472,10 +514,9 @@ def test_update_velocity_with_pos_vel_and_no_accel_ints():
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([1, 1, 1])
     test_rocket.acceleration = np.array([0, 0, 0])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_velocity(current_time, previous_time) == np.array(
-            [1, 1, 1]))
+    delta_time = 1
+    assert np.all(test_rocket.update_velocity(delta_time) ==
+                  np.array([1, 1, 1]))
 
 
 def test_update_velocity_with_pos_vel_and_accel_ints():
@@ -486,10 +527,9 @@ def test_update_velocity_with_pos_vel_and_accel_ints():
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([1, 1, 1])
     test_rocket.acceleration = np.array([1, 1, 1])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_velocity(current_time, previous_time) == np.array(
-            [2, 2, 2]))
+    delta_time = 1
+    assert np.all(test_rocket.update_velocity(delta_time) ==
+                  np.array([2, 2, 2]))
 
 
 def test_update_velocity_with_neg_vel_and_accel_ints():
@@ -500,10 +540,9 @@ def test_update_velocity_with_neg_vel_and_accel_ints():
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([-1, -1, -1])
     test_rocket.acceleration = np.array([-1, -1, -1])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_velocity(current_time, previous_time) == np.array(
-            [-2, -2, -2]))
+    delta_time = 1
+    assert np.all(test_rocket.update_velocity(delta_time) ==
+                  np.array([-2, -2, -2]))
 
 
 def test_update_velocity_with_pos_vel_and_big_neg_accel_ints():
@@ -515,10 +554,9 @@ def test_update_velocity_with_pos_vel_and_big_neg_accel_ints():
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([1, 1, 1])
     test_rocket.acceleration = np.array([-3, -3, -3])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_velocity(current_time, previous_time) == np.array(
-            [-2, -2, -2]))
+    delta_time = 1
+    assert np.all(test_rocket.update_velocity(delta_time) ==
+                  np.array([-2, -2, -2]))
 
 
 def test_update_velocity_with_neg_vel_and_big_pos_accel_ints():
@@ -530,10 +568,9 @@ def test_update_velocity_with_neg_vel_and_big_pos_accel_ints():
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([-1, -1, -1])
     test_rocket.acceleration = np.array([3, 3, 3])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_velocity(current_time, previous_time) == np.array(
-            [2, 2, 2]))
+    delta_time = 1
+    assert np.all(test_rocket.update_velocity(delta_time) ==
+                  np.array([2, 2, 2]))
 
 
 def test_update_velocity_with_big_pos_vel_and_neg_accel_ints():
@@ -544,10 +581,9 @@ def test_update_velocity_with_big_pos_vel_and_neg_accel_ints():
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([3, 3, 3])
     test_rocket.acceleration = np.array([-1, -1, -1])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_velocity(current_time, previous_time) == np.array(
-            [2, 2, 2]))
+    delta_time = 1
+    assert np.all(test_rocket.update_velocity(delta_time) ==
+                  np.array([2, 2, 2]))
 
 
 def test_update_velocity_with_big_neg_vel_and_pos_accel_ints():
@@ -558,10 +594,9 @@ def test_update_velocity_with_big_neg_vel_and_pos_accel_ints():
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([-3, -3, -3])
     test_rocket.acceleration = np.array([1, 1, 1])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_velocity(current_time, previous_time) == np.array(
-            [-2, -2, -2]))
+    delta_time = 1
+    assert np.all(test_rocket.update_velocity(delta_time) ==
+                  np.array([-2, -2, -2]))
 
 
 def test_update_velocity_with_vel_and_accel_floats():
@@ -571,10 +606,9 @@ def test_update_velocity_with_vel_and_accel_floats():
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([1.5, 2.5, 3.5])
     test_rocket.acceleration = np.array([1.5, 2.5, 3.5])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_velocity(current_time, previous_time) == np.array(
-            [3, 5, 7]))
+    delta_time = 1
+    assert np.all(test_rocket.update_velocity(delta_time) ==
+                  np.array([3, 5, 7]))
 
 
 # Testing functions for update_position().
@@ -586,10 +620,9 @@ def test_update_position_no_position_or_vel():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([0, 0, 0])
     test_rocket.velocity = np.array([0, 0, 0])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [0, 0, 0]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([0, 0, 0]))
 
 
 def test_update_position_with_pos_int_position_and_no_time_change():
@@ -600,10 +633,9 @@ def test_update_position_with_pos_int_position_and_no_time_change():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([1, 1, 1])
     test_rocket.velocity = np.array([1, 1, 1])
-    current_time, previous_time = 0, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [1, 1, 1]))
+    delta_time = 0
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([1, 1, 1]))
 
 
 def test_update_position_with_pos_int_position_and_no_vel():
@@ -614,10 +646,9 @@ def test_update_position_with_pos_int_position_and_no_vel():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([1, 1, 1])
     test_rocket.velocity = np.array([0, 0, 0])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [1, 1, 1]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([1, 1, 1]))
 
 
 def test_update_position_with_pos_position_and_vel_ints():
@@ -628,10 +659,9 @@ def test_update_position_with_pos_position_and_vel_ints():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([1, 1, 1])
     test_rocket.velocity = np.array([1, 1, 1])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [2, 2, 2]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([2, 2, 2]))
 
 
 def test_update_position_with_neg_position_and_vel_ints():
@@ -642,10 +672,9 @@ def test_update_position_with_neg_position_and_vel_ints():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([-1, -1, -1])
     test_rocket.velocity = np.array([-1, -1, -1])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [-2, -2, 0]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([-2, -2, 0]))
 
 
 def test_update_position_with_pos_position_and_big_neg_vel_ints():
@@ -656,10 +685,9 @@ def test_update_position_with_pos_position_and_big_neg_vel_ints():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([1, 1, 1])
     test_rocket.velocity = np.array([-3, -3, -3])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [-2, -2, 0]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([-2, -2, 0]))
 
 
 def test_update_position_with_neg_position_and_big_pos_vel_ints():
@@ -670,10 +698,9 @@ def test_update_position_with_neg_position_and_big_pos_vel_ints():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([-1, -1, -1])
     test_rocket.velocity = np.array([3, 3, 3])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [2, 2, 2]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([2, 2, 2]))
 
 
 def test_update_position_with_big_pos_position_and_neg_vel_ints():
@@ -684,10 +711,9 @@ def test_update_position_with_big_pos_position_and_neg_vel_ints():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([3, 3, 3])
     test_rocket.velocity = np.array([-1, -1, -1])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [2, 2, 2]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([2, 2, 2]))
 
 
 def test_update_position_with_big_neg_position_and_pos_vel_ints():
@@ -698,10 +724,9 @@ def test_update_position_with_big_neg_position_and_pos_vel_ints():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([-3, -3, -3])
     test_rocket.velocity = np.array([1, 1, 1])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [-2, -2, 0]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([-2, -2, 0]))
 
 
 def test_update_position_with_position_and_vel_floats():
@@ -712,10 +737,9 @@ def test_update_position_with_position_and_vel_floats():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([1.5, 2.5, 3.5])
     test_rocket.velocity = np.array([1.5, 2.5, 3.5])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [3, 5, 7]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([3, 5, 7]))
 
 
 def test_update_position_with_neg_z_and_no_vel():
@@ -726,10 +750,9 @@ def test_update_position_with_neg_z_and_no_vel():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([1.5, 2.5, -3.5])
     test_rocket.velocity = np.array([0, 0, 0])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [1.5, 2.5, 0]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([1.5, 2.5, 0]))
 
 
 def test_update_position_with_only_neg_velocity():
@@ -740,7 +763,6 @@ def test_update_position_with_only_neg_velocity():
     test_rocket = rm.Rocket()
     test_rocket.position = np.array([0, 0, 0])
     test_rocket.velocity = np.array([-1.5, -2.5, -3.5])
-    current_time, previous_time = 1, 0
-    assert np.all(
-        test_rocket.update_position(current_time, previous_time) == np.array(
-            [-1.5, -2.5, 0]))
+    delta_time = 1
+    assert np.all(test_rocket.update_position(delta_time) ==
+                  np.array([-1.5, -2.5, 0]))
