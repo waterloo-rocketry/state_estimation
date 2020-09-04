@@ -766,3 +766,5 @@ def test_update_position_with_only_neg_velocity():
     delta_time = 1
     assert np.all(test_rocket.update_position(delta_time) ==
                   np.array([-1.5, -2.5, 0]))
+
+# TODO: test update_orientation()
