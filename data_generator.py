@@ -24,7 +24,7 @@ def is_any_negative(array):
 
     Parameters
     ----------
-    array: numpy.ndarray
+    array: numpy.array
 
     Returns
     -------
@@ -96,7 +96,8 @@ def time_update(rocket, time_dict):
     updated_acceleration = rocket.update_acceleration()
     updated_thrust = rocket.update_thrust(time_dict["current_time"])
     updated_mass = rocket.update_mass(time_dict["timestep"])
-    updated_orientation = rocket.update_orientation(time_dict["timestep"])
+    updated_orientation = rocket.update_orientation(rm.ANGULAR_RATES,
+                                                    time_dict["timestep"])
 
     # Update the Rocket object
     rocket.position = updated_position

@@ -1,6 +1,7 @@
 # Test suite for rocket_math.py
 
 import numpy as np
+from pyquaternion import Quaternion
 
 import rocket_math as rm
 
@@ -10,47 +11,42 @@ Notes:
 - No rocket_air_density unit test since the current method for
   determining/testing air density needs to be changed.
 '''
-# -----------------------CONSTANTS---------------------------
-TOLERANCE = 0.001
-
-
-# -----------------------------------------------------------
 
 
 # Testing functions for gravity().
 def test_gravity_at_ground():
     test_rocket = rm.Rocket()
-    assert abs(test_rocket.gravity() - 32.1389) <= TOLERANCE
+    assert abs(test_rocket.gravity() - 32.1389) <= rm.TOLERANCE
 
 
 def test_gravity_at_100_ft():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 100
-    assert abs(test_rocket.gravity() - 32.1386) <= TOLERANCE
+    assert abs(test_rocket.gravity() - 32.1386) <= rm.TOLERANCE
 
 
 def test_gravity_at_1000_ft():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 1000
-    assert abs(test_rocket.gravity() - 32.1358) <= TOLERANCE
+    assert abs(test_rocket.gravity() - 32.1358) <= rm.TOLERANCE
 
 
 def test_gravity_at_10000_ft():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 10000
-    assert abs(test_rocket.gravity() - 32.1082) <= TOLERANCE
+    assert abs(test_rocket.gravity() - 32.1082) <= rm.TOLERANCE
 
 
 def test_gravity_at_100000_ft():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 100000
-    assert abs(test_rocket.gravity() - 31.8336) <= TOLERANCE
+    assert abs(test_rocket.gravity() - 31.8336) <= rm.TOLERANCE
 
 
 def test_gravity_at_float_num_ft():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 5432.10
-    assert abs(test_rocket.gravity() - 32.1222) <= TOLERANCE
+    assert abs(test_rocket.gravity() - 32.1222) <= rm.TOLERANCE
 
 
 # Testing functions for update_mass().
@@ -66,7 +62,7 @@ def test_update_mass_above_mass_loss_threshold():
     expected_mass = {"total_mass": 110 - rm.MASS_LOSS * timestep,
                      "body_mass": 55,
                      "prop_mass": 55 - rm.MASS_LOSS * timestep}
-    assert all((test_rocket.mass[key] - expected_mass[key]) <= TOLERANCE
+    assert all((test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
                for key in test_rocket.mass)
     # assert test_rocket.update_mass(timestep) == {
     #    "total_mass": 110 - rm.MASS_LOSS * timestep,
@@ -88,7 +84,7 @@ def test_secondary_update_mass_above_mass_loss_threshold():
     expected_mass = {"total_mass": 110 - (2 * rm.MASS_LOSS * timestep),
                      "body_mass": 55,
                      "prop_mass": 55 - (2 * rm.MASS_LOSS * timestep)}
-    assert all((test_rocket.mass[key] - expected_mass[key]) <= TOLERANCE
+    assert all((test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
                for key in test_rocket.mass)
 
 
@@ -105,7 +101,7 @@ def test_update_mass_below_mass_loss_threshold():
     expected_mass = {"total_mass": 100,
                      "body_mass": 100,
                      "prop_mass": 0}
-    assert all((test_rocket.mass[key] - expected_mass[key]) <= TOLERANCE
+    assert all((test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
                for key in test_rocket.mass)
 
 
@@ -121,7 +117,7 @@ def test_secondary_update_mass_below_mass_loss_threshold():
     expected_mass = {"total_mass": 100,
                      "body_mass": 100,
                      "prop_mass": 0}
-    assert all((test_rocket.mass[key] - expected_mass[key]) <= TOLERANCE
+    assert all((test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
                for key in test_rocket.mass)
 
 
@@ -229,8 +225,8 @@ def test_drag_with_positive_int_velocity(mocker):
                  return_value=np.array(
                      [(1 / np.sqrt(3)), (1 / np.sqrt(3)), (1 / np.sqrt(3))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.7204)
-    assert all((test_rocket.drag_force() - np.array(
-        [0.0367, 0.0367, 0.0367])) <= TOLERANCE)
+    assert np.all((test_rocket.drag_force() - np.array(
+        [0.0367, 0.0367, 0.0367])) <= rm.TOLERANCE)
 
 
 def test_drag_with_negative_int_velocity(mocker):
@@ -245,8 +241,8 @@ def test_drag_with_negative_int_velocity(mocker):
                  return_value=np.array([(-1 / np.sqrt(3)), (-1 / np.sqrt(3)),
                                         (-1 / np.sqrt(3))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.7204)
-    assert all((test_rocket.drag_force() - np.array(
-        [-0.0367, -0.0367, -0.0367])) <= TOLERANCE)
+    assert np.all((test_rocket.drag_force() - np.array(
+        [-0.0367, -0.0367, -0.0367])) <= rm.TOLERANCE)
 
 
 def test_drag_with_float_velocity(mocker):
@@ -262,8 +258,8 @@ def test_drag_with_float_velocity(mocker):
                      [(32.5 / np.sqrt(5618.75)), (42.5 / np.sqrt(5618.75)),
                       (52.5 / np.sqrt(5618.75))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.4254)
-    assert all((test_rocket.drag_force() - np.array(
-        [30.5226, 39.9142, 49.3058])) <= TOLERANCE)
+    assert np.all((test_rocket.drag_force() - np.array(
+        [30.5226, 39.9142, 49.3058])) <= rm.TOLERANCE)
 
 
 # Testing functions for update_thrust().
@@ -403,7 +399,6 @@ def test_update_acceleration_with_no_thrust_or_drag(mocker):
     force vectors are zero vectors).
     """
     test_rocket = rm.Rocket()
-    # TODO: investigate why thrust = [1, 1, 1] when this isn't set
     test_rocket.thrust = np.array([0, 0, 0])
     test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "prop_mass": 0.5}
     mocker.patch('rocket_math.Rocket.drag_force',
@@ -476,7 +471,7 @@ def test_update_acceleration_with_thrust_and_drag_floats(mocker):
     mocker.patch('rocket_math.Rocket.gravity',
                  return_value=32.1389)
     assert np.all(test_rocket.update_acceleration() -
-                  np.array([2.9661, 3.2486, -28.6078])) <= TOLERANCE
+                  np.array([2.9661, 3.2486, -28.6078])) <= rm.TOLERANCE
 
 
 # Testing functions for update_velocity().
@@ -767,4 +762,271 @@ def test_update_position_with_only_neg_velocity():
     assert np.all(test_rocket.update_position(delta_time) ==
                   np.array([-1.5, -2.5, 0]))
 
-# TODO: test update_orientation()
+
+# TODO: test update_orientation() and figure out the test cases
+def test_update_orientation_eighth_rev_x_axis():
+    """
+    Test update_orientation() rotating 1/8 of a revolution about the x-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.125  # 1/8 second
+    angular_rates = np.array([2 * np.pi, 0, 0])  # 1 rev/s in x
+    orientation_after_update = Quaternion(axis=[1, 0, 0],
+                                          angle=(np.pi / 4)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_neg_eighth_rev_x_axis():
+    """
+    Test update_orientation() rotating -1/8 of a revolution about the x-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.125  # 1/8 second
+    angular_rates = np.array([-2 * np.pi, 0, 0])  # 1 rev/s in x
+    orientation_after_update = Quaternion(axis=[1, 0, 0],
+                                          angle=(-np.pi / 4)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_quarter_rev_x_axis():
+    """
+    Test update_orientation() rotating 1/4 of a revolution about the x-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.25  # 1/4 second
+    angular_rates = np.array([2 * np.pi, 0, 0])  # 1 rev/s in x
+    orientation_after_update = Quaternion(axis=[1, 0, 0],
+                                          angle=(np.pi / 2)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_half_rev_x_axis():
+    """
+    Test update_orientation() rotating 1/2 of a revolution about the x-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.5  # 1/2 second
+    angular_rates = np.array([2 * np.pi, 0, 0])  # 1 rev/s in x
+    orientation_after_update = Quaternion(axis=[1, 0, 0],
+                                          angle=np.pi).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_three_quarter_rev_x_axis():
+    """
+    Test update_orientation() rotating 3/4 of a revolution about the x-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.75  # 3/4 second
+    angular_rates = np.array([2 * np.pi, 0, 0])  # 1 rev/s in x
+    orientation_after_update = Quaternion(axis=[1, 0, 0],
+                                          angle=(3 * np.pi / 2)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_eighth_rev_y_axis():
+    """
+    Test update_orientation() rotating 1/8 of a revolution about the y-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.125  # 1/8 second
+    angular_rates = np.array([0, 2 * np.pi, 0])  # 1 rev/s in y
+    orientation_after_update = Quaternion(axis=[0, 1, 0],
+                                          angle=(np.pi / 4)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_neg_eighth_rev_y_axis():
+    """
+    Test update_orientation() rotating -1/8 of a revolution about the y-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.125  # 1/8 second
+    angular_rates = np.array([0, -2 * np.pi, 0])  # 1 rev/s in y
+    orientation_after_update = Quaternion(axis=[0, 1, 0],
+                                          angle=(-np.pi / 4)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_quarter_rev_y_axis():
+    """
+    Test update_orientation() rotating 1/4 of a revolution about the y-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.25  # 1/4 second
+    angular_rates = np.array([0, 2 * np.pi, 0])  # 1 rev/s in y
+    orientation_after_update = Quaternion(axis=[0, 1, 0],
+                                          angle=(np.pi / 2)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_half_rev_y_axis():
+    """
+    Test update_orientation() rotating 1/2 of a revolution about the y-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.5  # 1/2 second
+    angular_rates = np.array([0, 2 * np.pi, 0])  # 1 rev/s in y
+    orientation_after_update = Quaternion(axis=[0, 1, 0],
+                                          angle=np.pi).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_three_quarter_rev_y_axis():
+    """
+    Test update_orientation() rotating 3/4 of a revolution about the y-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.75  # 3/4 second
+    angular_rates = np.array([0, 2 * np.pi, 0])  # 1 rev/s in y
+    orientation_after_update = Quaternion(axis=[0, 1, 0],
+                                          angle=(3 * np.pi / 2)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_eighth_rev_z_axis():
+    """
+    Test update_orientation() rotating 1/8 of a revolution about the z-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.125  # 1/8 second
+    angular_rates = np.array([0, 0, 2 * np.pi])  # 1 rev/s in z
+    orientation_after_update = Quaternion(axis=[0, 0, 1],
+                                          angle=(np.pi / 4)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_neg_eighth_rev_z_axis():
+    """
+    Test update_orientation() rotating -1/8 of a revolution about the z-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.125  # 1/8 second
+    angular_rates = np.array([0, 0, -2 * np.pi])  # 1 rev/s in z
+    orientation_after_update = Quaternion(axis=[0, 0, 1],
+                                          angle=(-np.pi / 4)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_quarter_rev_z_axis():
+    """
+    Test update_orientation() rotating 1/4 of a revolution about the z-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.25  # 1/4 second
+    angular_rates = np.array([0, 0, 2 * np.pi])  # 1 rev/s in z
+    orientation_after_update = Quaternion(axis=[0, 0, 1],
+                                          angle=(np.pi / 2)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_half_rev_z_axis():
+    """
+    Test update_orientation() rotating 1/2 of a revolution about the z-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.5  # 1/2 second
+    angular_rates = np.array([0, 0, 2 * np.pi])  # 1 rev/s in z
+    orientation_after_update = Quaternion(axis=[0, 0, 1],
+                                          angle=np.pi).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_three_quarter_rev_z_axis():
+    """
+    Test update_orientation() rotating 3/4 of a revolution about the z-axis.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.75  # 3/4 second
+    angular_rates = np.array([0, 0, 2 * np.pi])  # 1 rev/s in z
+    orientation_after_update = Quaternion(axis=[0, 0, 1],
+                                          angle=(3 * np.pi / 2)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)
+
+
+def test_update_orientation_half_rev_all_axes():
+    """
+    Test update_orientation() rotating 1/2 of a revolution about all of the
+    axes.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.5  # 1/2 second
+    angular_rates = np.array([np.pi / np.sqrt(3), np.pi / np.sqrt(3),
+                              np.pi / np.sqrt(3)])  # 1/6 rev/s for all
+    orientation_after_update = Quaternion(axis=[1, 1, 1],
+                                          angle=(np.pi / 2)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation - orientation_after_update <= rm.TOLERANCE)
+
+
+def test_update_orientation_quarter_rev_x_y_axes():
+    """
+    Test update_orientation() rotating 1/4 of a revolution about the y and z
+    axes.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.25  # 1/4 second
+    angular_rates = np.array([2.80992617, 5.61985144, 0])    # hand calc
+    orientation_after_update = Quaternion(axis=[1, 2, 0],
+                                          angle=(np.pi / 2)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation - orientation_after_update <= rm.TOLERANCE)
+
+
+def test_update_orientation_quarter_rev_y_z_axes():
+    """
+    Test update_orientation() rotating 1/4 of a revolution about the y and z
+    axes.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.25  # 1/4 second
+    angular_rates = np.array([0, 2.80992617, 5.61985144])    # hand calc
+    orientation_after_update = Quaternion(axis=[0, 1, 2],
+                                          angle=(np.pi / 2)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation - orientation_after_update <= rm.TOLERANCE)
+
+
+def test_update_orientation_quarter_rev_x_z_axes():
+    """
+    Test update_orientation() rotating 1/4 of a revolution about the x and z
+    axes.
+    """
+    test_rocket = rm.Rocket()
+    delta_time = 0.25  # 1/4 second
+    angular_rates = np.array([5.61985144, 0, 2.80992617])    # hand calc
+    orientation_after_update = Quaternion(axis=[2, 0, 1],
+                                          angle=(np.pi / 2)).elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation - orientation_after_update <= rm.TOLERANCE)
+
+
+def test_update_orientation_from_non_identity_quat():
+    """
+    Test update_orientation() rotating from non-identity quaternion.
+
+    Note: rotation is 1/4 revolution about x axis.
+    """
+    test_rocket = rm.Rocket()
+    orientation = Quaternion(axis=[-1, 0, 0], angle=(np.pi / 2))
+    test_rocket.orientation = orientation.elements
+    delta_time = 0.25   # 1/4 second
+    angular_rates = np.array([2 * np.pi, 0, 0])
+    orientation_after_update = Quaternion().elements
+    new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
+    assert np.all(new_orientation == orientation_after_update)

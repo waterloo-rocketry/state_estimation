@@ -34,18 +34,19 @@ BODY_MASS = 55  # currently arbitrary
 # TODO: implement the proper loss
 MASS_LOSS = 0.05
 
-# The rocket's fixed angular velocities in deg/s
+# The rocket's fixed angular velocities in rev/s
 X_ANGULAR_RATE = 0  # Current coordinate system yaw rate
-Y_ANGULAR_RATE = 1  # Current coordinate system pitch rate
-Z_ANGULAR_RATE = 180  # Current coordinate system roll rate
+Y_ANGULAR_RATE = 0.0028  # Current coordinate system pitch rate (1 degree/s)
+Z_ANGULAR_RATE = 0.5  # Current coordinate system roll rate (180 degree/s)
+ANGULAR_RATES = np.array([X_ANGULAR_RATE, Y_ANGULAR_RATE, Z_ANGULAR_RATE])
 
 # Launch site parameters
 TOWER_ANGLE = 90
 LAUNCH_SITE_ALTITUDE = 0
 LOCAL_MAGNETIC_FIELD = 0  # TODO: figure out what we need to actually store
 
-# Decimal places for final answers
-DECIMALS = 4
+# Tolerance for equality checks
+TOLERANCE = 0.001
 
 
 # ------------------------------------------------------------
@@ -72,6 +73,10 @@ class Rocket:
     temperature: float
     altitude: float
 
+    Notes
+    -----
+    orientation is in the format of [w, x, y, z], where [w] is the scalar part
+    of the quaternion and [x, y, z] are the vector parts.
     """
 
     def __init__(self, mass=None, thrust=np.array([0, 0, 0]), burn_time=0,
@@ -119,7 +124,7 @@ class Rocket:
         self.position_enu = np.array([0.0, 0.0, 0.0])  # [ft]
         self.velocity = np.array([0.0, 0.0, 0.0])  # [ft/s]
         self.acceleration = np.array([0.0, 0.0, 0.0])  # [ft/s^2]
-        self.orientation = np.array([1, 0, 0, 0])   # unit quaternion
+        self.orientation = np.array([1.0, 0.0, 0.0, 0.0])  # identity quat.
         self.baro_pressure = 0  # [psi]
         self.temperature = 0  # in fahrenheit
         self.altitude = 0  # [ft]
@@ -181,14 +186,17 @@ class Rocket:
         """
         if type(self) == type(other):
             return self.mass == other.mass \
-                   and np.all(self.thrust == other.thrust) \
+                   and all((self.thrust - other.thrust) <= TOLERANCE) \
                    and self.burn_time == other.burn_time \
                    and self.sensor_noise == other.sensor_noise \
-                   and np.all(self.position == other.position) \
-                   and np.all(self.position_enu == other.position_enu) \
-                   and np.all(self.velocity == other.velocity) \
-                   and np.all(self.acceleration == other.acceleration) \
-                   and self.orientation == other.orientation \
+                   and all((self.position - other.position) <= TOLERANCE) \
+                   and all((self.position_enu - other.position_enu)
+                           <= TOLERANCE) \
+                   and all((self.velocity - other.velocity) <= TOLERANCE) \
+                   and all((self.acceleration - other.acceleration)
+                           <= TOLERANCE) \
+                   and all((self.orientation - other.orientation)
+                           <= TOLERANCE) \
                    and self.baro_pressure == other.baro_pressure \
                    and self.temperature == other.temperature \
                    and self.altitude == other.altitude
@@ -368,7 +376,7 @@ class Rocket:
             position[2] = 0
         return position
 
-    def update_orientation(self, delta_time) -> np.array([]):
+    def update_orientation(self, angular_rates, delta_time) -> np.array([]):
         """
         Calculates the orientation quaternion of the Rocket object based on
         fixed angular rates.
@@ -376,8 +384,10 @@ class Rocket:
         Parameters
         ----------
         delta_time: float
-            The change in time since the last update of rocket flight in
+            The change in time since the last update of the Rocket flight in
             seconds.
+        angular_rates: numpy.array
+            The angular (pitch, yaw, and roll) rates of the Rocket object.
 
         Returns
         -------
@@ -385,14 +395,9 @@ class Rocket:
             Numpy array (containing data with float type) representing the
             orientation of the Rocket object.
         """
-        quat_orientation = Quaternion(self.orientation)
-        quat_orientation.integrate(
-            [X_ANGULAR_RATE, Y_ANGULAR_RATE, Z_ANGULAR_RATE],
-            delta_time)
-        vector_orientation = np.array([quat_orientation.scalar])
-        vector_orientation = np.append(vector_orientation,
-                                       quat_orientation.vector)
-        return vector_orientation
+        orientation_quaternion = Quaternion(self.orientation)
+        orientation_quaternion.integrate(angular_rates, delta_time)
+        return orientation_quaternion.elements
 
     # Converts the position of the rocket for local cartesian to ENU [ft]
     def cart_to_enu(self) -> np.array([]):
