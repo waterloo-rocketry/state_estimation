@@ -976,7 +976,7 @@ def test_update_orientation_half_rev_all_axes():
 
 def test_update_orientation_quarter_rev_x_y_axes():
     """
-    Test update_orientation() rotating 1/4 of a revolution about the y and z
+    Test update_orientation() rotating 1/4 of a revolution about the x and y
     axes.
     """
     test_rocket = rm.Rocket()
