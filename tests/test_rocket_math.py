@@ -763,7 +763,6 @@ def test_update_position_with_only_neg_velocity():
                   np.array([-1.5, -2.5, 0]))
 
 
-# TODO: test update_orientation() and figure out the test cases
 def test_update_orientation_eighth_rev_x_axis():
     """
     Test update_orientation() rotating 1/8 of a revolution about the x-axis.
@@ -974,6 +973,20 @@ def test_update_orientation_half_rev_all_axes():
     assert np.all(new_orientation - orientation_after_update <= rm.TOLERANCE)
 
 
+'''
+Note for the next 3 unit tests:
+    Angular rates were determined through an online calculator and by using the
+    predetermined desired quaternion with the formula:
+    
+        angular_rates = (quaternion_axis * quaternion_angle) / timestep
+        
+    Since the initial quaternion is always [1, 0, 0, 0] in this context.
+    
+    Online calculator used:
+    -https://www.andre-gaschler.com/rotationconverter/
+'''
+
+
 def test_update_orientation_quarter_rev_x_y_axes():
     """
     Test update_orientation() rotating 1/4 of a revolution about the x and y
@@ -981,7 +994,7 @@ def test_update_orientation_quarter_rev_x_y_axes():
     """
     test_rocket = rm.Rocket()
     delta_time = 0.25  # 1/4 second
-    angular_rates = np.array([2.80992617, 5.61985144, 0])    # hand calc
+    angular_rates = np.array([2.80992617, 5.61985144, 0])
     orientation_after_update = Quaternion(axis=[1, 2, 0],
                                           angle=(np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
@@ -995,7 +1008,7 @@ def test_update_orientation_quarter_rev_y_z_axes():
     """
     test_rocket = rm.Rocket()
     delta_time = 0.25  # 1/4 second
-    angular_rates = np.array([0, 2.80992617, 5.61985144])    # hand calc
+    angular_rates = np.array([0, 2.80992617, 5.61985144])
     orientation_after_update = Quaternion(axis=[0, 1, 2],
                                           angle=(np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
@@ -1009,7 +1022,7 @@ def test_update_orientation_quarter_rev_x_z_axes():
     """
     test_rocket = rm.Rocket()
     delta_time = 0.25  # 1/4 second
-    angular_rates = np.array([5.61985144, 0, 2.80992617])    # hand calc
+    angular_rates = np.array([5.61985144, 0, 2.80992617])
     orientation_after_update = Quaternion(axis=[2, 0, 1],
                                           angle=(np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)

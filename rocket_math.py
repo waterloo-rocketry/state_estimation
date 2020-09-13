@@ -34,10 +34,10 @@ BODY_MASS = 55  # currently arbitrary
 # TODO: implement the proper loss
 MASS_LOSS = 0.05
 
-# The rocket's fixed angular velocities in rev/s
+# The rocket's fixed angular velocities in rad/s
 X_ANGULAR_RATE = 0  # Current coordinate system yaw rate
-Y_ANGULAR_RATE = 0.0028  # Current coordinate system pitch rate (1 degree/s)
-Z_ANGULAR_RATE = 0.5  # Current coordinate system roll rate (180 degree/s)
+Y_ANGULAR_RATE = np.pi/180  # Current coordinate system pitch rate (1 degree/s)
+Z_ANGULAR_RATE = np.pi  # Current coordinate system roll rate (180 degree/s)
 ANGULAR_RATES = np.array([X_ANGULAR_RATE, Y_ANGULAR_RATE, Z_ANGULAR_RATE])
 
 # Launch site parameters
