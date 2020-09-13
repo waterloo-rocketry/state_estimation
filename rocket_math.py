@@ -4,12 +4,7 @@ calculate parameters for data generation.
 """
 
 import numpy as np
-
-# TODO: investigate quaternion implementation
-# Using pyquaternion instead of numpy-quaternion because the later was harder
-# to install (could change later if need be)
-# import numpy-quaternion as quat
-
+from pyquaternion import Quaternion
 
 # -----------------------CONSTANTS---------------------------
 # TODO: add computed/determined drag coefficient
@@ -39,24 +34,23 @@ BODY_MASS = 55  # currently arbitrary
 # TODO: implement the proper loss
 MASS_LOSS = 0.05
 
-# The rocket's fixed angular velocities
-YAW_RATE = 0
-PITCH_RATE = 1
-ROLL_RATE = 180  # in deg/s
+# The rocket's fixed angular velocities in rad/s
+X_ANGULAR_RATE = 0  # Current coordinate system yaw rate
+Y_ANGULAR_RATE = np.pi/180  # Current coordinate system pitch rate (1 degree/s)
+Z_ANGULAR_RATE = np.pi  # Current coordinate system roll rate (180 degree/s)
+ANGULAR_RATES = np.array([X_ANGULAR_RATE, Y_ANGULAR_RATE, Z_ANGULAR_RATE])
 
 # Launch site parameters
 TOWER_ANGLE = 90
 LAUNCH_SITE_ALTITUDE = 0
 LOCAL_MAGNETIC_FIELD = 0  # TODO: figure out what we need to actually store
 
-# Decimal places for final answers
-DECIMALS = 4
+# Tolerance for equality checks
+TOLERANCE = 0.001
 
 
 # ------------------------------------------------------------
 
-# TODO: add function docstrings
-# TODO: finish filling in class docstrings
 class Rocket:
     """
     A class used to represent a Rocket object.
@@ -67,18 +61,22 @@ class Rocket:
     ----------
 
     mass: dict of {str : float}
-    thrust: numpy.ndarray
+    thrust: numpy.array
     burn_time: float
     sensor_noise: dict of {str : float}
-    position: numpy.ndarray
-    position_enu: numpy.ndarray
-    velocity: numpy.ndarray
-    acceleration: numpy.ndarray
-    orientation: None
+    position: numpy.array
+    position_enu: numpy.array
+    velocity: numpy.array
+    acceleration: numpy.array
+    orientation: numpy.array
     baro_pressure: float
     temperature: float
     altitude: float
 
+    Notes
+    -----
+    orientation is in the format of [w, x, y, z], where [w] is the scalar part
+    of the quaternion and [x, y, z] are the vector parts.
     """
 
     def __init__(self, mass=None, thrust=np.array([0, 0, 0]), burn_time=0,
@@ -97,7 +95,7 @@ class Rocket:
             the mass of the combustible materials in the rocket (i.e. oxidizer,
             fuel).
 
-        thrust: numpy.ndarray
+        thrust: numpy.array
             thrust represents the average thrust the Rocket generates during
             a flight.
 
@@ -126,7 +124,7 @@ class Rocket:
         self.position_enu = np.array([0.0, 0.0, 0.0])  # [ft]
         self.velocity = np.array([0.0, 0.0, 0.0])  # [ft/s]
         self.acceleration = np.array([0.0, 0.0, 0.0])  # [ft/s^2]
-        self.orientation = None
+        self.orientation = np.array([1.0, 0.0, 0.0, 0.0])  # identity quat.
         self.baro_pressure = 0  # [psi]
         self.temperature = 0  # in fahrenheit
         self.altitude = 0  # [ft]
@@ -188,14 +186,17 @@ class Rocket:
         """
         if type(self) == type(other):
             return self.mass == other.mass \
-                   and np.all(self.thrust == other.thrust) \
+                   and all((self.thrust - other.thrust) <= TOLERANCE) \
                    and self.burn_time == other.burn_time \
                    and self.sensor_noise == other.sensor_noise \
-                   and np.all(self.position == other.position) \
-                   and np.all(self.position_enu == other.position_enu) \
-                   and np.all(self.velocity == other.velocity) \
-                   and np.all(self.acceleration == other.acceleration) \
-                   and self.orientation == other.orientation \
+                   and all((self.position - other.position) <= TOLERANCE) \
+                   and all((self.position_enu - other.position_enu)
+                           <= TOLERANCE) \
+                   and all((self.velocity - other.velocity) <= TOLERANCE) \
+                   and all((self.acceleration - other.acceleration)
+                           <= TOLERANCE) \
+                   and all((self.orientation - other.orientation)
+                           <= TOLERANCE) \
                    and self.baro_pressure == other.baro_pressure \
                    and self.temperature == other.temperature \
                    and self.altitude == other.altitude
@@ -253,7 +254,7 @@ class Rocket:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.array
             Numpy array (containing data with float type) representing the
             unit vector for the velocity vector.
         """
@@ -278,7 +279,7 @@ class Rocket:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.array
             Numpy array (containing data with float type) representing the
             drag force experienced by the Rocket object in lbf.
         """
@@ -300,7 +301,7 @@ class Rocket:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.array
             Numpy array (containing data with float type) representing the
             thrust generated by the Rocket object in lbf.
         """
@@ -317,7 +318,7 @@ class Rocket:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.array
             Numpy array (containing data with float type) representing the
             acceleration of the Rocket object in ft/s^2.
         """
@@ -344,7 +345,7 @@ class Rocket:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.array
             Numpy array (containing data with float type) representing the
             velocity of the Rocket object in ft/s.
         """
@@ -363,7 +364,7 @@ class Rocket:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.array
             Numpy array (containing data with float type) representing the
             position of the Rocket object in ft.
         """
@@ -374,6 +375,29 @@ class Rocket:
         if position[2] < 0:
             position[2] = 0
         return position
+
+    def update_orientation(self, angular_rates, delta_time) -> np.array([]):
+        """
+        Calculates the orientation quaternion of the Rocket object based on
+        fixed angular rates.
+
+        Parameters
+        ----------
+        delta_time: float
+            The change in time since the last update of the Rocket flight in
+            seconds.
+        angular_rates: numpy.array
+            The angular (pitch, yaw, and roll) rates of the Rocket object.
+
+        Returns
+        -------
+        numpy.array
+            Numpy array (containing data with float type) representing the
+            orientation of the Rocket object.
+        """
+        orientation_quaternion = Quaternion(self.orientation)
+        orientation_quaternion.integrate(angular_rates, delta_time)
+        return orientation_quaternion.elements
 
     # Converts the position of the rocket for local cartesian to ENU [ft]
     def cart_to_enu(self) -> np.array([]):

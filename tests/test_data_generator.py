@@ -161,6 +161,8 @@ def test_initial_time_update(mocker):
                                        "accel_noise": 1, "gyro_noise": 1,
                                        "mag_noise": 1})
     test_rocket_after_update.acceleration = np.array([0, 0, 149.6793])
+    test_rocket_after_update.orientation = \
+        np.array([0.6216, 0, 0.0044, 0.7833])
     mocker.patch('rocket_math.Rocket.update_thrust',
                  return_value=np.array([0, 0, 20000]))
     mocker.patch('rocket_math.Rocket.update_acceleration',
@@ -173,6 +175,8 @@ def test_initial_time_update(mocker):
         "total_mass": 110 - rm.MASS_LOSS * time_dict["timestep"],
         "body_mass": 55,
         "prop_mass": 55 - rm.MASS_LOSS * time_dict["timestep"]})
+    mocker.patch('rocket_math.Rocket.update_orientation',
+                 return_value=np.array([0.6216, 0, 0.0044, 0.7833]))
     data_gen.time_update(test_rocket, time_dict)
     assert test_rocket == test_rocket_after_update
 
@@ -200,6 +204,8 @@ def test_secondary_time_update(mocker):
     test_rocket_after_update.velocity = np.array([0, 0, 149.762])
     test_rocket_after_update.position = np.array([0, 0, 149.762])
     test_rocket_after_update.altitude = 149.762
+    test_rocket_after_update.orientation = \
+        np.array([-0.2272, 0, 0.0054, 0.9738])
     mocker.patch('rocket_math.Rocket.update_thrust',
                  return_value=np.array([0, 0, 20000]))
     mocker.patch('rocket_math.Rocket.update_acceleration',
@@ -212,6 +218,8 @@ def test_secondary_time_update(mocker):
         "total_mass": 110 - 2 * rm.MASS_LOSS * time_dict["timestep"],
         "body_mass": 55,
         "prop_mass": 55 - 2 * rm.MASS_LOSS * time_dict["timestep"]})
+    mocker.patch('rocket_math.Rocket.update_orientation',
+                 return_value=np.array([-0.2272, 0, 0.0054, 0.9738]))
     data_gen.time_update(test_rocket, time_dict)
     assert test_rocket == test_rocket_after_update
 
@@ -225,7 +233,7 @@ def test_initial_write():
     valid_file = StringIO("[0.0000 0.0000 0.0000]            "
                           "[0.0000 0.0000 0.0000]            "
                           "[0.0000 0.0000 0.0000]            "
-                          "[0.0000 0.0000 0.0000]           \n")
+                          "[1.0000 0.0000 0.0000 0.0000]    \n")
     test_rocket = rm.Rocket(
         {"total_mass": 110, "body_mass": 55, "prop_mass": 55},
         np.array([0, 0, 0]), 100,
@@ -250,13 +258,14 @@ def test_two_writes():
     valid_file = StringIO("[0.0000 0.0000 0.0000]            "
                           "[0.0000 0.0000 0.0000]            "
                           "[  0.0000   0.0000 149.6793]      "
-                          "[    0.0000     0.0000 20000.0000]\n")
+                          "[0.6216 0.0000 0.0044 0.7833]    \n")
     test_rocket = rm.Rocket(
         {"total_mass": 110, "body_mass": 55, "prop_mass": 55},
         np.array([0, 0, 20000]), 100,
         {"press_noise": 1, "temp_noise": 1, "accel_noise": 1,
          "gyro_noise": 1, "mag_noise": 1})
     test_rocket.acceleration = np.array([0, 0, 149.6793])
+    test_rocket.orientation = np.array([0.6216, 0, 0.0044, 0.7833])
     gt_test_file = StringIO()
     sd_test_file = StringIO()
     data_gen.write_data_to_file(test_rocket, gt_test_file, sd_test_file)
@@ -267,14 +276,15 @@ def test_two_writes():
     valid_file = StringIO("[0.0000 0.0000 0.0000]            "
                           "[0.0000 0.0000 0.0000]            "
                           "[  0.0000   0.0000 149.6793]      "
-                          "[    0.0000     0.0000 20000.0000]\n"
+                          "[0.6216 0.0000 0.0044 0.7833]    \n"
                           "[0.0000 0.0000 0.0150]            "
                           "[0.0000 0.0000 1.4976]            "
                           "[  0.0000   0.0000 149.7620]      "
-                          "[    0.0000     0.0000 20000.0000]\n")
+                          "[-0.2272  0.0000  0.0054  0.9738]\n")
     test_rocket.acceleration = np.array([0, 0, 149.7620])
     test_rocket.velocity = np.array([0, 0, 1.4976])
     test_rocket.position = np.array([0, 0, 0.0150])
+    test_rocket.orientation = np.array([-0.2272, 0.0000, 0.0054, 0.9738])
     data_gen.write_data_to_file(test_rocket, gt_test_file, sd_test_file)
     gt_file_value2 = gt_test_file.getvalue()
     sd_file_value2 = sd_test_file.getvalue()
@@ -292,15 +302,17 @@ def test_full_length_write():
     valid_file = StringIO("[11111.1111 11111.1111 11111.1111] "
                           "[22222.2222 22222.2222 22222.2222] "
                           "[33333.3333 33333.3333 33333.3333] "
-                          "[44444.4444 44444.4444 44444.4444]\n")
+                          "[44444.4444 44444.4444 44444.4444 44444.4444]\n")
     test_rocket = rm.Rocket(
         {"total_mass": 110, "body_mass": 55, "prop_mass": 55},
-        np.array([44444.4444, 44444.4444, 44444.4444]), 100,
+        np.array([0, 0, 0]), 100,
         {"press_noise": 1, "temp_noise": 1, "accel_noise": 1,
          "gyro_noise": 1, "mag_noise": 1})
     test_rocket.acceleration = np.array([33333.3333, 33333.3333, 33333.3333])
     test_rocket.velocity = np.array([22222.2222, 22222.2222, 22222.2222])
     test_rocket.position = np.array([11111.1111, 11111.1111, 11111.1111])
+    test_rocket.orientation = \
+        np.array([44444.4444, 44444.4444, 44444.4444, 44444.4444])
     gt_test_file = StringIO()
     sd_test_file = StringIO()
     data_gen.write_data_to_file(test_rocket, gt_test_file, sd_test_file)

@@ -24,7 +24,7 @@ def is_any_negative(array):
 
     Parameters
     ----------
-    array: numpy.ndarray
+    array: numpy.array
 
     Returns
     -------
@@ -91,21 +91,22 @@ def time_update(rocket, time_dict):
         Stores the time attributes in the data generation process.
     """
     # Calculate updated state from previous timestep's state
-    updated_position = rocket.update_position(time_dict["current_time"]
-                                              - time_dict["previous_time"])
-    updated_velocity = rocket.update_velocity(time_dict["current_time"]
-                                              - time_dict["previous_time"])
+    updated_position = rocket.update_position(time_dict["timestep"])
+    updated_velocity = rocket.update_velocity(time_dict["timestep"])
     updated_acceleration = rocket.update_acceleration()
     updated_thrust = rocket.update_thrust(time_dict["current_time"])
     updated_mass = rocket.update_mass(time_dict["timestep"])
+    updated_orientation = rocket.update_orientation(rm.ANGULAR_RATES,
+                                                    time_dict["timestep"])
 
     # Update the Rocket object
     rocket.position = updated_position
     rocket.velocity = updated_velocity
     rocket.acceleration = updated_acceleration
     rocket.thrust = updated_thrust
-    rocket.altitude = rocket.position[2]
     rocket.mass = updated_mass
+    rocket.orientation = updated_orientation
+    rocket.altitude = rocket.position[2]
 
 
 # TODO: add writing to sensor_data files once sensor methods are implemented
@@ -124,7 +125,7 @@ def write_data_to_file(rocket, gt_file, sd_file):
     """
     new_data_gt = np.array(
         [rocket.position, rocket.velocity,
-         rocket.acceleration, rocket.thrust])
+         rocket.acceleration, rocket.orientation])
     data_gt = ["", "", "", ""]
     for i, data_elem_gt in enumerate(new_data_gt):
         data_gt[i] = np.array2string(data_elem_gt, precision=4,
@@ -140,13 +141,12 @@ def main():
     Main function for generating data based on the input Rocket.
     """
     # Timestep setup
-    time_dict = {"current_time": 0, "previous_time": 0, "end_time": 100,
-                 "timestep": 0.01}
+    time_dict = {"current_time": 0, "end_time": 100, "timestep": 0.01}
 
     with open(GT_PATH, "w") as ground_truth:
         with open(SD_PATH, "w") as sensor_data:
             headings_gt = ["Position\t", "Velocity\t", "Acceleration\t",
-                           "Thrust\t", "Orientation\t"]
+                           "Orientation\t"]
             headings_sd = ["Baro_Pressure\t", "Temperature\t",
                            "Acceleration\t", "Angular_Rates\t",
                            "Magnetic Field\t"]
@@ -170,7 +170,6 @@ def main():
             while time_dict["current_time"] < time_dict["end_time"]:
                 time_update(current_rocket, time_dict)
                 write_data_to_file(current_rocket, ground_truth, sensor_data)
-                time_dict["previous_time"] = time_dict["current_time"]
                 time_dict["current_time"] += time_dict["timestep"]
 
 
