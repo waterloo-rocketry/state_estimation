@@ -376,7 +376,6 @@ class Rocket:
             position[2] = 0
         return position
 
-<<<<<<< HEAD
     def update_orientation(self, angular_rates, delta_time) -> np.array([]):
         """
         Calculates the orientation quaternion of the Rocket object based on
@@ -399,7 +398,7 @@ class Rocket:
         orientation_quaternion = Quaternion(self.orientation)
         orientation_quaternion.integrate(angular_rates, delta_time)
         return orientation_quaternion.elements
-=======
+    
     def rocket_baro_pressure(self, temperature, height):
         """
         Calculates the barometric pressure of the atmosphere around the Rocket.
@@ -457,7 +456,6 @@ class Rocket:
         # convert to celsius from fahrenheit
         temperature = (imperial_temperature - 32) * 5 / 9
         return temperature
->>>>>>> 9740720... prep for rebase
 
     # Converts the position of the rocket for local cartesian to ENU [ft]
     def cart_to_enu(self) -> np.array([]):
