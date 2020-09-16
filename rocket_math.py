@@ -375,6 +375,64 @@ class Rocket:
             position[2] = 0
         return position
 
+    def rocket_baro_pressure(self, temperature, height):
+        """
+        Calculates the barometric pressure of the atmosphere around the Rocket.
+
+        Parameters
+        ----------
+        temperature: float
+            Temperature of the air around the rocket, in celsius.
+
+        height: float
+            Height of the rocket above ground level, in meters.
+
+        Returns
+        ---------
+        baro_pressure: float
+            Barometric pressure of the atmosphere around the rocket, in pascals.
+        """
+        # convert units for NASA formula
+        converted_temperature = 32 + 1.8 * temperature
+        converted_height = height * 3.28084
+
+        # calculated barometric pressure is in pounds per square foot
+        if converted_height < 36152:
+            imperial_baro_pressure = 2116 * ((converted_temperature + 459.7) / 518.6) ** 5.256
+        else:
+            imperial_baro_pressure = 473.1 * np.exp(173 - 0.000048 * converted_height)
+
+        # convert to pascals
+        baro_pressure = imperial_baro_pressure * 47.8803
+        return baro_pressure
+
+    def rocket_temperature(self, height):
+        """
+        Calculates the temperature around the rocket, in celsius.
+
+        Parameters
+        ----------
+        height: float
+            Height of the rocket above ground level, in meters.
+        
+        Returns
+        -------
+        temperature: float
+            Temperature of the air around the rocket, in celsius.
+        """
+        # convert units for NASA formula
+        converted_height = height * 3.28084
+
+        # calculated temperature is in fahrenheit
+        if converted_height < 36152:
+            imperial_temperature = 59 - 0.000356 * converted_height
+        else:
+            imperial_temperature = -70
+        
+        # convert to celsius from fahrenheit
+        temperature = (imperial_temperature - 32) * 5 / 9
+        return temperature
+
     # Converts the position of the rocket for local cartesian to ENU [ft]
     def cart_to_enu(self) -> np.array([]):
         pass
