@@ -1043,3 +1043,50 @@ def test_update_orientation_from_non_identity_quat():
     orientation_after_update = Quaternion().elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
     assert np.all(new_orientation == orientation_after_update)
+
+# Testing functions for finding temperature
+def test_temperature_at_ground():
+    test_rocket = rm.Rocket()
+    assert(test_rocket.rocket_temperature(0) - 15.04 <= rm.TOLERANCE)
+
+
+def test_temperature_at_100m():
+    test_rocket = rm.Rocket()
+    assert(test_rocket.rocket_temperature(100) - 14.391 <= rm.TOLERANCE)
+
+
+def test_temperature_at_1000m():
+    test_rocket = rm.Rocket()
+    assert(test_rocket.rocket_temperature(1000) - 8.55 <= rm.TOLERANCE)
+
+
+def test_temperature_at_10000m():
+    test_rocket = rm.Rocket()
+    assert(test_rocket.rocket_temperature(10000) - -49.86 <= rm.TOLERANCE)
+
+
+# Testing functions for finding barometric pressure
+def test_baro_pressure_at_ground():
+    test_rocket = rm.Rocket()
+    assert(abs(test_rocket.rocket_baro_pressure(15.04, 0) - 101.4009) <= rm.TOLERANCE)
+
+
+def test_baro_pressure_at_100_m():
+    test_rocket = rm.Rocket()
+    assert(abs(test_rocket.rocket_baro_pressure(14.391, 100) - 100.2062) <= rm.TOLERANCE)
+
+
+def test_baro_pressure_at_1000_m():
+    test_rocket = rm.Rocket()
+    assert(abs(test_rocket.rocket_baro_pressure(8.55, 1000) - 89.9581) <= rm.TOLERANCE)
+
+
+def test_baro_pressure_at_10000_m():
+    test_rocket = rm.Rocket()
+    assert(abs(test_rocket.rocket_baro_pressure(-49.86, 10000) - 26.5162) <= rm.TOLERANCE)
+
+
+def test_baro_pressure_at_20000m():
+    test_rocket = rm.Rocket()
+    assert(abs(test_rocket.rocket_baro_pressure(-56.46, 20000) - 5.5298) <= rm.TOLERANCE)
+

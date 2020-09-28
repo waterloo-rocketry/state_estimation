@@ -123,11 +123,14 @@ class Rocket:
         self.position = np.array([0.0, 0.0, 0.0])  # [ft] (cartesian vector)
         self.position_enu = np.array([0.0, 0.0, 0.0])  # [ft]
         self.velocity = np.array([0.0, 0.0, 0.0])  # [ft/s]
-        self.acceleration = np.array([0.0, 0.0, 0.0])  # [ft/s^2]
+        self.world_acceleration = np.array([0.0, 0.0, 0.0])  # [ft/s^2]
+        self.body_acceleration = np.array([0.0, 0.0, 0.0]) # [ft/s^2]
         self.orientation = np.array([1.0, 0.0, 0.0, 0.0])  # identity quat.
         self.baro_pressure = 0  # [psi]
         self.temperature = 0  # in fahrenheit
         self.altitude = 0  # [ft]
+        self.body_mag_field = None # Waiting on model choice
+        self.world_mag_field = None # Waiting on model choice
 
     def __repr__(self):
         """
@@ -162,12 +165,15 @@ class Rocket:
                f"{self.sensor_noise['mag_noise']}\n\t}}\n\n\t\tOUTPUTS\n\t" \
                f"Position:\t{self.position}\n\tPosition ENU:\t" \
                f"{self.position_enu}\n\tVelocity:\t" \
-               f"{self.velocity}\n\tAcceleration:\t" \
-               f"{self.acceleration}\n\tOrientation:\t" \
+               f"{self.velocity}\n\tWorld Acceleration:\t" \
+               f"{self.world_acceleration}\n\tBody Acceleration:\t" \
+               f"{self.body_acceleration}\n\tOrientation:\t" \
                f"{self.orientation}\n\tBaro Pressure:\t" \
                f"{self.baro_pressure}\n\tTemperature:\t" \
                f"{self.temperature}\n\tAltitude:\t" \
-               f"{self.altitude}"  # Note: still unsure about formatting.
+               f"{self.altitude}\n\tBody Magnetic Field:\t" \
+               f"{self.body_mag_field}\n\tWorld Magnetic Field:\t" \
+               f"{self.world_mag_field}"    # Note: still unsure about formatting.
 
     def __eq__(self, other):
         """
@@ -193,13 +199,17 @@ class Rocket:
                    and all((self.position_enu - other.position_enu)
                            <= TOLERANCE) \
                    and all((self.velocity - other.velocity) <= TOLERANCE) \
-                   and all((self.acceleration - other.acceleration)
+                   and all((self.world_acceleration - other.world_acceleration)
                            <= TOLERANCE) \
                    and all((self.orientation - other.orientation)
                            <= TOLERANCE) \
                    and self.baro_pressure == other.baro_pressure \
                    and self.temperature == other.temperature \
-                   and self.altitude == other.altitude
+                   and self.altitude == other.altitude \
+                   and all((self.body_mag_field - other.body_mag_field) 
+                           <= TOLERANCE) \
+                   and all((self.world_mag_field - other.world_mag_field)
+                           <= TOLERANCE)            
         return False
 
     def gravity(self) -> float:
@@ -330,7 +340,7 @@ class Rocket:
                 self.mass["total_mass"] * self.gravity())
         if any(resultant_force):
             return resultant_force / self.mass["total_mass"]
-        return self.acceleration
+        return self.world_acceleration
 
     def update_velocity(self, delta_time) -> np.array([]):
         """
@@ -349,7 +359,7 @@ class Rocket:
             Numpy array (containing data with float type) representing the
             velocity of the Rocket object in ft/s.
         """
-        return self.velocity + self.acceleration * delta_time
+        return self.velocity + self.world_acceleration * delta_time
 
     def update_position(self, delta_time) -> np.array([]):
         """
@@ -414,20 +424,15 @@ class Rocket:
         Returns
         ---------
         baro_pressure: float
-            Barometric pressure of the atmosphere around the rocket, in pascals.
+            Barometric pressure of the atmosphere around the rocket, in kilopascals.
         """
-        # convert units for NASA formula
-        converted_temperature = 32 + 1.8 * temperature
-        converted_height = height * 3.28084
-
-        # calculated barometric pressure is in pounds per square foot
-        if converted_height < 36152:
-            imperial_baro_pressure = 2116 * ((converted_temperature + 459.7) / 518.6) ** 5.256
+        # Use NASA formula to calculate barometric pressure
+        if height < 11000:
+            baro_pressure = 101.29 * ((temperature + 273.1) / 288.08) ** 5.256
         else:
-            imperial_baro_pressure = 473.1 * np.exp(173 - 0.000048 * converted_height)
+            baro_pressure = 22.65 * np.exp(1.73 - 0.000157 * height)
 
-        # convert to pascals
-        baro_pressure = imperial_baro_pressure * 47.8803
+        # Result is of units KPa
         return baro_pressure
 
     def rocket_temperature(self, height):
@@ -444,18 +449,53 @@ class Rocket:
         temperature: float
             Temperature of the air around the rocket, in celsius.
         """
-        # convert units for NASA formula
-        converted_height = height * 3.28084
-
-        # calculated temperature is in fahrenheit
-        if converted_height < 36152:
-            imperial_temperature = 59 - 0.000356 * converted_height
+        # Use NASA formula to calculate temperature
+        if height < 11000:
+            temperature = 15.04 - 0.00649 * height
         else:
-            imperial_temperature = -70
+            temperature = -56.46
         
-        # convert to celsius from fahrenheit
-        temperature = (imperial_temperature - 32) * 5 / 9
+        # Result is in celsius
         return temperature
+
+    def rocket_proper_acceleration(self, orientation):
+        """
+        Calculates the body (proper) acceleration of the rocket,
+        that is what the accelerometer measures.
+
+        Parameters
+        ----------
+        orientation: numpy.array
+            Numpy array representing orientation of the rocket
+
+        Returns
+        -------
+        proper_acceleration
+            Numpy array representing the proper acceleration 
+            of the rocket
+        """
+        quaternion = Quaternion(orientation)
+        proper_acceleration = quaternion.rotate(self.world_acceleration)
+        return proper_acceleration
+
+    def rocket_magnetic_field(self, orientation):
+        """
+        Calculates the magnetic field around the rocket (Tesla)
+
+        Parameters
+        ----------
+        orientation: numpy.array
+            Numpy array representing orientation of the rocket
+
+        Returns
+        -------
+        body_magnetic_field
+            Numpy array representing the magnetic field around
+            the rocket
+        """
+        quaternion = Quaternion(orientation)
+        body_magnetic_field = quaternion.rotate(self.world_mag_field)
+        return body_magnetic_field
 
     # Converts the position of the rocket for local cartesian to ENU [ft]
     def cart_to_enu(self) -> np.array([]):
