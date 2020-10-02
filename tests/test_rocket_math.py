@@ -1047,46 +1047,59 @@ def test_update_orientation_from_non_identity_quat():
 # Testing functions for finding temperature
 def test_temperature_at_ground():
     test_rocket = rm.Rocket()
-    assert(test_rocket.rocket_temperature(0) - 15.04 <= rm.TOLERANCE)
+    test_rocket.altitude = 0
+    assert(test_rocket.update_temperature() - 15.04 <= rm.TOLERANCE)
 
 
 def test_temperature_at_100m():
     test_rocket = rm.Rocket()
-    assert(test_rocket.rocket_temperature(100) - 14.391 <= rm.TOLERANCE)
+    test_rocket.altitude = 100
+    assert(test_rocket.update_temperature() - 14.391 <= rm.TOLERANCE)
 
 
 def test_temperature_at_1000m():
     test_rocket = rm.Rocket()
-    assert(test_rocket.rocket_temperature(1000) - 8.55 <= rm.TOLERANCE)
+    test_rocket.altitude = 1000
+    assert(test_rocket.update_temperature() - 8.55 <= rm.TOLERANCE)
 
 
 def test_temperature_at_10000m():
     test_rocket = rm.Rocket()
-    assert(test_rocket.rocket_temperature(10000) - -49.86 <= rm.TOLERANCE)
+    test_rocket.altitude = 10000
+    assert(test_rocket.update_temperature() - -49.86 <= rm.TOLERANCE)
 
 
 # Testing functions for finding barometric pressure
 def test_baro_pressure_at_ground():
     test_rocket = rm.Rocket()
-    assert(abs(test_rocket.rocket_baro_pressure(15.04, 0) - 101.4009) <= rm.TOLERANCE)
+    test_rocket.temperature = 15.04
+    test_rocket.altitude = 0
+    assert(abs(test_rocket.update_baro_pressure() - 101.4009) <= rm.TOLERANCE)
 
 
-def test_baro_pressure_at_100_m():
+def test_baro_pressure_at_100m():
     test_rocket = rm.Rocket()
-    assert(abs(test_rocket.rocket_baro_pressure(14.391, 100) - 100.2062) <= rm.TOLERANCE)
+    test_rocket.temperature = 14.391
+    test_rocket.altitude = 100
+    assert(abs(test_rocket.update_baro_pressure() - 100.2062) <= rm.TOLERANCE)
 
 
-def test_baro_pressure_at_1000_m():
+def test_baro_pressure_at_1000m():
     test_rocket = rm.Rocket()
-    assert(abs(test_rocket.rocket_baro_pressure(8.55, 1000) - 89.9581) <= rm.TOLERANCE)
+    test_rocket.temperature = 8.55
+    test_rocket.altitude = 1000
+    assert(abs(test_rocket.update_baro_pressure() - 89.9581) <= rm.TOLERANCE)
 
 
-def test_baro_pressure_at_10000_m():
+def test_baro_pressure_at_10000m():
     test_rocket = rm.Rocket()
-    assert(abs(test_rocket.rocket_baro_pressure(-49.86, 10000) - 26.5162) <= rm.TOLERANCE)
+    test_rocket.temperature = -49.86
+    test_rocket.altitude = 10000
+    assert(abs(test_rocket.update_baro_pressure() - 26.5162) <= rm.TOLERANCE)
 
 
 def test_baro_pressure_at_20000m():
     test_rocket = rm.Rocket()
-    assert(abs(test_rocket.rocket_baro_pressure(-56.46, 20000) - 5.5298) <= rm.TOLERANCE)
-
+    test_rocket.temperature = -56.46
+    test_rocket.altitude = 20000
+    assert(abs(test_rocket.update_baro_pressure() - 5.5298) <= rm.TOLERANCE)

@@ -409,17 +409,11 @@ class Rocket:
         orientation_quaternion.integrate(angular_rates, delta_time)
         return orientation_quaternion.elements
     
-    def rocket_baro_pressure(self, temperature, height):
+    def update_baro_pressure(self):
         """
         Calculates the barometric pressure of the atmosphere around the Rocket.
-
-        Parameters
-        ----------
-        temperature: float
-            Temperature of the air around the rocket, in celsius.
-
-        height: float
-            Height of the rocket above ground level, in meters.
+        Uses NASA formulas:
+        https://web.archive.org/web/20200203025242/https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
 
         Returns
         ---------
@@ -427,22 +421,18 @@ class Rocket:
             Barometric pressure of the atmosphere around the rocket, in kilopascals.
         """
         # Use NASA formula to calculate barometric pressure
-        if height < 11000:
-            baro_pressure = 101.29 * ((temperature + 273.1) / 288.08) ** 5.256
+        if self.altitude < 11000:
+            baro_pressure = 101.29 * ((self.temperature + 273.1) / 288.08) ** 5.256
         else:
-            baro_pressure = 22.65 * np.exp(1.73 - 0.000157 * height)
+            baro_pressure = 22.65 * np.exp(1.73 - 0.000157 * self.altitude)
 
-        # Result is of units KPa
         return baro_pressure
 
-    def rocket_temperature(self, height):
+    def update_temperature(self):
         """
         Calculates the temperature around the rocket, in celsius.
-
-        Parameters
-        ----------
-        height: float
-            Height of the rocket above ground level, in meters.
+        Uses NASA formulas:
+        https://web.archive.org/web/20200203025242/https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
         
         Returns
         -------
@@ -450,23 +440,17 @@ class Rocket:
             Temperature of the air around the rocket, in celsius.
         """
         # Use NASA formula to calculate temperature
-        if height < 11000:
-            temperature = 15.04 - 0.00649 * height
+        if self.altitude < 11000:
+            temperature = 15.04 - 0.00649 * self.altitude
         else:
             temperature = -56.46
         
-        # Result is in celsius
         return temperature
 
-    def rocket_proper_acceleration(self, orientation):
+    def update_proper_acceleration(self):
         """
         Calculates the body (proper) acceleration of the rocket,
         that is what the accelerometer measures.
-
-        Parameters
-        ----------
-        orientation: numpy.array
-            Numpy array representing orientation of the rocket
 
         Returns
         -------
@@ -474,18 +458,13 @@ class Rocket:
             Numpy array representing the proper acceleration 
             of the rocket
         """
-        quaternion = Quaternion(orientation)
+        quaternion = Quaternion(self.orientation)
         proper_acceleration = quaternion.rotate(self.world_acceleration)
         return proper_acceleration
 
-    def rocket_magnetic_field(self, orientation):
+    def update_magnetic_field(self):
         """
         Calculates the magnetic field around the rocket (Tesla)
-
-        Parameters
-        ----------
-        orientation: numpy.array
-            Numpy array representing orientation of the rocket
 
         Returns
         -------
@@ -493,7 +472,7 @@ class Rocket:
             Numpy array representing the magnetic field around
             the rocket
         """
-        quaternion = Quaternion(orientation)
+        quaternion = Quaternion(self.orientation)
         body_magnetic_field = quaternion.rotate(self.world_mag_field)
         return body_magnetic_field
 
