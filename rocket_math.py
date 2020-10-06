@@ -129,8 +129,8 @@ class Rocket:
         self.baro_pressure = 0  # [psi]
         self.temperature = 0  # in fahrenheit
         self.altitude = 0  # [ft]
-        self.body_mag_field = None # Waiting on model choice
-        self.world_mag_field = None # Waiting on model choice
+        self.body_mag_field = np.array([0.0, 0.0, 0.0]) # Waiting on model choice
+        self.world_mag_field = np.array([0.0, 0.0, 0.0]) # Waiting on model choice
 
     def __repr__(self):
         """
