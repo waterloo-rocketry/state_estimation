@@ -447,7 +447,7 @@ class Rocket:
         
         return temperature
 
-    def update_proper_acceleration(self):
+    def update_body_acceleration(self):
         """
         Calculates the body (proper) acceleration of the rocket,
         that is what the accelerometer measures.
@@ -455,7 +455,7 @@ class Rocket:
         Returns
         -------
         proper_acceleration
-            Numpy array representing the proper acceleration 
+            Numpy array representing the body (proper) acceleration 
             of the rocket
         """
         quaternion = Quaternion(self.orientation)

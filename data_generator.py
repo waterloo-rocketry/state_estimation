@@ -98,6 +98,10 @@ def time_update(rocket, time_dict):
     updated_mass = rocket.update_mass(time_dict["timestep"])
     updated_orientation = rocket.update_orientation(rm.ANGULAR_RATES,
                                                     time_dict["timestep"])
+    updated_temperature = rocket.update_temperature()
+    updated_baro_pressure = rocket.update_baro_pressure()
+    updated_body_acceleration = rocket.update_body_acceleration()
+    updated_mag_field = rocket.update_magnetic_field()
 
     # Update the Rocket object
     rocket.position = updated_position
@@ -107,7 +111,10 @@ def time_update(rocket, time_dict):
     rocket.mass = updated_mass
     rocket.orientation = updated_orientation
     rocket.altitude = rocket.position[2]
-
+    rocket.temperature = updated_temperature
+    rocket.baro_pressure = updated_baro_pressure
+    rocket.body_mag_field = updated_mag_field
+    rocket.body_acceleration = updated_body_acceleration
 
 # TODO: add writing to sensor_data files once sensor methods are implemented
 def write_data_to_file(rocket, gt_file, sd_file):
@@ -132,7 +139,16 @@ def write_data_to_file(rocket, gt_file, sd_file):
                                      floatmode='fixed')
     data_to_write = ' '.join(["{0: <33}".format(data) for data in data_gt])
     gt_file.write(data_to_write + "\n")
-    sd_file.write('')  # Add what is being written to sensor_data file here
+
+    new_sensor_data_gt = np.array(
+        [rocket.baro_pressure, rocket.temperature,
+        rocket.body_acceleration, rocket.body_mag_field])
+    sensor_gt = ["", "", "", ""]
+    for i, sensor_data_elem_gt in enumerate(new_sensor_data_gt):
+        sensor_gt[i] = np.array2string(sensor_data_elem_gt, precision=4,
+                                    floatmode='fixed')
+    sensor_data_to_write = ' '.join(["{0: <33}".format(data) for data in sensor_gt])
+    sd_file.write(sensor_data_to_write + "\n")
 
 
 # TODO: Check if the title output can be shortened
