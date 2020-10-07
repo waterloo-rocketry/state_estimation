@@ -97,6 +97,7 @@ def time_update(rocket, time_dict):
     updated_mass = rocket.update_mass(time_dict["timestep"])
     updated_orientation = rocket.update_orientation(rm.ANGULAR_RATES,
                                                     time_dict["timestep"])
+    #                                                
     updated_temperature = rocket.update_temperature()
     updated_baro_pressure = rocket.update_baro_pressure()
     updated_body_acceleration = rocket.update_body_acceleration()
@@ -131,18 +132,14 @@ def write_data_to_file(rocket, gt_file, sd_file):
     new_gt_data = np.array(
         [rocket.position, rocket.velocity,
          rocket.body_acceleration, rocket.orientation])
-    new_sensor_data = np.array(
+    sensor_data = np.array(
         [str(rocket.baro_pressure), str(rocket.temperature),
         np.array2string(rocket.body_acceleration), np.array2string(rocket.body_mag_field)])
     gt_data = ["", "", "", ""]
-    sensor_data = ["", "", "", ""]
 
     for i, data_elem_gt in enumerate(new_gt_data):
         gt_data[i] = np.array2string(data_elem_gt, precision=4,
                                      floatmode='fixed')
-    
-    for i, sensor_data_elem in enumerate(new_sensor_data):
-        sensor_data[i] = sensor_data_elem
         
     data_to_write = ' '.join(["{0: <33}".format(data) for data in gt_data])
     sensor_data_to_write = ' '.join(["{0: <33}".format(data) for data in sensor_data])
@@ -187,6 +184,25 @@ def main():
                 write_data_to_file(current_rocket, ground_truth, sensor_data)
                 time_dict["current_time"] += time_dict["timestep"]
 
+def test():
+    rocket = rm.Rocket()
+    new_gt_data = np.array(
+        [rocket.position, rocket.velocity,
+         rocket.body_acceleration, rocket.orientation])
+    sensor_data = np.array(
+        [str(rocket.baro_pressure), str(rocket.temperature),
+        np.array2string(rocket.body_acceleration), np.array2string(rocket.body_mag_field)])
+    gt_data = ["", "", "", ""]
+
+    for i, data_elem_gt in enumerate(new_gt_data):
+        gt_data[i] = np.array2string(data_elem_gt, precision=4,
+                                     floatmode='fixed')
+        
+    data_to_write = ' '.join(["{0: <33}".format(data) for data in gt_data])
+    sensor_data_to_write = ' '.join(["{0: <33}".format(data) for data in sensor_data])
+    print(data_to_write)
+    print(sensor_data_to_write)
 
 if __name__ == "__main__":
-    main
+    #main()
+    test()
