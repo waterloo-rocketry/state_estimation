@@ -248,7 +248,6 @@ def test_secondary_time_update(mocker):
     assert test_rocket == test_rocket_after_update
 
 
-# TODO: test for sensor data writing to file
 # Test functions for write_data_to_file().
 def test_initial_write():
     """
@@ -261,7 +260,7 @@ def test_initial_write():
     valid_sensor_file = StringIO("20                                "
                                  "40                                "
                                  "[0 0 1]                           "
-                                 "[0 0 1]                           ")
+                                 "[0 0 1]                           \n")
     test_rocket = rm.Rocket(
         {"total_mass": 110, "body_mass": 55, "prop_mass": 55},
         np.array([0, 0, 0]), 100,
@@ -296,6 +295,12 @@ def test_two_writes():
                           "[0.0000 0.0000 0.0000]            "
                           "[  0.0000   0.0000 149.6793]      "
                           "[0.6216 0.0000 0.0044 0.7833]    \n")
+
+    valid_sensor_file = StringIO("20                                "
+                                 "40                                "
+                                 "[0 0 1]                           "
+                                 "[0 0 1]                           \n")
+
     test_rocket = rm.Rocket(
         {"total_mass": 110, "body_mass": 55, "prop_mass": 55},
         np.array([0, 0, 20000]), 100,
@@ -303,12 +308,18 @@ def test_two_writes():
          "gyro_noise": 1, "mag_noise": 1})
     test_rocket.acceleration = np.array([0, 0, 149.6793])
     test_rocket.orientation = np.array([0.6216, 0, 0.0044, 0.7833])
+    test_rocket.temperature = 40
+    test_rocket.baro_pressure = 20
+    test_rocket.body_acceleration = np.array([0, 0, 1])
+    test_rocket.body_mag_field = np.array([0, 0, 1])
+
     gt_test_file = StringIO()
     sd_test_file = StringIO()
     data_gen.write_data_to_file(test_rocket, gt_test_file, sd_test_file)
     gt_file_value1 = gt_test_file.getvalue()
     sd_file_value1 = sd_test_file.getvalue()
     valid1 = valid_file.getvalue()
+    sensor_valid1 = valid_sensor_file.getvalue()
 
     valid_file = StringIO("[0.0000 0.0000 0.0000]            "
                           "[0.0000 0.0000 0.0000]            "
@@ -318,18 +329,35 @@ def test_two_writes():
                           "[0.0000 0.0000 1.4976]            "
                           "[  0.0000   0.0000 149.7620]      "
                           "[-0.2272  0.0000  0.0054  0.9738]\n")
+    valid_sensor_file = StringIO("20                                "
+                                 "40                                "
+                                 "[0 0 1]                           "
+                                 "[0 0 1]                           \n"
+                                 "30                                "
+                                 "50                                "
+                                 "[0 0 2]                           "
+                                 "[0 0 2]                           \n")
+    
     test_rocket.acceleration = np.array([0, 0, 149.7620])
     test_rocket.velocity = np.array([0, 0, 1.4976])
     test_rocket.position = np.array([0, 0, 0.0150])
     test_rocket.orientation = np.array([-0.2272, 0.0000, 0.0054, 0.9738])
+    test_rocket.temperature = 50
+    test_rocket.baro_pressure = 30
+    test_rocket.body_acceleration = np.array([0, 0, 2])
+    test_rocket.body_mag_field = np.array([0, 0, 2])
     data_gen.write_data_to_file(test_rocket, gt_test_file, sd_test_file)
     gt_file_value2 = gt_test_file.getvalue()
     sd_file_value2 = sd_test_file.getvalue()
     valid2 = valid_file.getvalue()
+    sensor_valid2 = valid_sensor_file.getvalue()
     gt_test_file.close()
     sd_test_file.close()
     valid_file.close()
-    assert gt_file_value1 == valid1 and gt_file_value2 == valid2
+    valid_sensor_file.close()
+
+    assert gt_file_value1 == valid1 and gt_file_value2 == valid2 and \
+    sd_file_value1 == sensor_valid1 and sd_file_value2 == sensor_valid2
 
 
 def test_full_length_write():
@@ -340,6 +368,10 @@ def test_full_length_write():
                           "[22222.2222 22222.2222 22222.2222] "
                           "[33333.3333 33333.3333 33333.3333] "
                           "[44444.4444 44444.4444 44444.4444 44444.4444]\n")
+    sensor_valid_file = StringIO("11111.1111                        "
+                                 "22222.2222                        "
+                                 "[33333.3333 33333.3333 33333.3333]"
+                                 "[44444.4444 44444.4444 44444.4444]\n")
     test_rocket = rm.Rocket(
         {"total_mass": 110, "body_mass": 55, "prop_mass": 55},
         np.array([0, 0, 0]), 100,
@@ -350,14 +382,18 @@ def test_full_length_write():
     test_rocket.position = np.array([11111.1111, 11111.1111, 11111.1111])
     test_rocket.orientation = \
         np.array([44444.4444, 44444.4444, 44444.4444, 44444.4444])
+    test_rocket.temperature = 22222.2222
+    test_rocket.baro_pressure = 11111.1111
+    test_rocket.body_acceleration = np.array([33333.3333, 33333.3333, 33333.3333])
+    test_rocket.body_mag_field = np.array([44444.4444, 44444.4444, 44444.4444])
+    
     gt_test_file = StringIO()
     sd_test_file = StringIO()
     data_gen.write_data_to_file(test_rocket, gt_test_file, sd_test_file)
     gt_file_value = gt_test_file.getvalue()
     sd_file_value = sd_test_file.getvalue()
     valid = valid_file.getvalue()
+    sensor_valid = sensor_valid_file.getvalue()
     gt_test_file.close()
     sd_test_file.close()
-    assert gt_file_value == valid
-
-test_initial_write()
+    assert gt_file_value == valid and sd_file_value == sensor_valid
