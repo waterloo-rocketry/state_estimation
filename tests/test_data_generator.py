@@ -257,19 +257,19 @@ def test_initial_write():
                           "[0.0000 0.0000 0.0000]            "
                           "[0.0000 0.0000 0.0000]            "
                           "[1.0000 0.0000 0.0000 0.0000]    \n")
-    valid_sensor_file = StringIO("20                                "
-                                 "40                                "
-                                 "[0 0 1]                           "
-                                 "[0 0 1]                           \n")
+    valid_sensor_file = StringIO("20.0000                           "
+                                 "40.0000                           "
+                                 "[0.0000 0.0000 1.0000]            "
+                                 "[0.0000 0.0000 1.0000]            \n")
     test_rocket = rm.Rocket(
         {"total_mass": 110, "body_mass": 55, "prop_mass": 55},
         np.array([0, 0, 0]), 100,
         {"press_noise": 1, "temp_noise": 1, "accel_noise": 1,
          "gyro_noise": 1, "mag_noise": 1})
-    test_rocket.temperature = 40
-    test_rocket.baro_pressure = 20
-    test_rocket.body_acceleration = np.array([0, 0, 1])
-    test_rocket.body_mag_field = np.array([0, 0, 1])
+    test_rocket.temperature = 40.0
+    test_rocket.baro_pressure = 20.0
+    test_rocket.body_acceleration = np.array([0.0, 0.0, 1.0])
+    test_rocket.body_mag_field = np.array([0.0, 0.0, 1.0])
 
     gt_test_file = StringIO()
     sd_test_file = StringIO()
@@ -296,10 +296,10 @@ def test_two_writes():
                           "[  0.0000   0.0000 149.6793]      "
                           "[0.6216 0.0000 0.0044 0.7833]    \n")
 
-    valid_sensor_file = StringIO("20                                "
-                                 "40                                "
-                                 "[0 0 1]                           "
-                                 "[0 0 1]                           \n")
+    valid_sensor_file = StringIO("20.0000                           "
+                                 "40.0000                           "
+                                 "[0.0000 0.0000 1.0000]            "
+                                 "[0.0000 0.0000 1.0000]            \n")
 
     test_rocket = rm.Rocket(
         {"total_mass": 110, "body_mass": 55, "prop_mass": 55},
@@ -308,10 +308,10 @@ def test_two_writes():
          "gyro_noise": 1, "mag_noise": 1})
     test_rocket.acceleration = np.array([0, 0, 149.6793])
     test_rocket.orientation = np.array([0.6216, 0, 0.0044, 0.7833])
-    test_rocket.temperature = 40
-    test_rocket.baro_pressure = 20
-    test_rocket.body_acceleration = np.array([0, 0, 1])
-    test_rocket.body_mag_field = np.array([0, 0, 1])
+    test_rocket.temperature = 40.0
+    test_rocket.baro_pressure = 20.0
+    test_rocket.body_acceleration = np.array([0.0, 0.0, 1.0])
+    test_rocket.body_mag_field = np.array([0.0, 0.0, 1.0])
 
     gt_test_file = StringIO()
     sd_test_file = StringIO()
@@ -328,24 +328,24 @@ def test_two_writes():
                           "[0.0000 0.0000 0.0150]            "
                           "[0.0000 0.0000 1.4976]            "
                           "[  0.0000   0.0000 149.7620]      "
-                          "[-0.2272  0.0000  0.0054  0.9738]\n")
-    valid_sensor_file = StringIO("20                                "
-                                 "40                                "
-                                 "[0 0 1]                           "
-                                 "[0 0 1]                           \n"
-                                 "30                                "
-                                 "50                                "
-                                 "[0 0 2]                           "
-                                 "[0 0 2]                           \n")
+                          "[-0.2272  0.0000  0.0054  0.9738]\n")    
+    valid_sensor_file = StringIO("20.0000                           "
+                                 "40.0000                           "
+                                 "[0.0000 0.0000 1.0000]            "
+                                 "[0.0000 0.0000 1.0000]            \n"
+                                 "30.0000                           "
+                                 "50.0000                           "
+                                 "[0.0000 0.0000 2.0000]            "
+                                 "[0.0000 0.0000 2.0000]            \n")
     
     test_rocket.acceleration = np.array([0, 0, 149.7620])
     test_rocket.velocity = np.array([0, 0, 1.4976])
     test_rocket.position = np.array([0, 0, 0.0150])
     test_rocket.orientation = np.array([-0.2272, 0.0000, 0.0054, 0.9738])
-    test_rocket.temperature = 50
-    test_rocket.baro_pressure = 30
-    test_rocket.body_acceleration = np.array([0, 0, 2])
-    test_rocket.body_mag_field = np.array([0, 0, 2])
+    test_rocket.temperature = 50.0000 
+    test_rocket.baro_pressure = 30.0000 
+    test_rocket.body_acceleration = np.array([0.0000, 0.0000, 2.0000])
+    test_rocket.body_mag_field = np.array([0.0000, 0.0000, 2.0000])
     data_gen.write_data_to_file(test_rocket, gt_test_file, sd_test_file)
     gt_file_value2 = gt_test_file.getvalue()
     sd_file_value2 = sd_test_file.getvalue()
@@ -370,14 +370,14 @@ def test_full_length_write():
                           "[44444.4444 44444.4444 44444.4444 44444.4444]\n")
     sensor_valid_file = StringIO("11111.1111                        "
                                  "22222.2222                        "
-                                 "[33333.3333 33333.3333 33333.3333]"
+                                 "[33333.3333 33333.3333 33333.3333] "
                                  "[44444.4444 44444.4444 44444.4444]\n")
     test_rocket = rm.Rocket(
         {"total_mass": 110, "body_mass": 55, "prop_mass": 55},
         np.array([0, 0, 0]), 100,
         {"press_noise": 1, "temp_noise": 1, "accel_noise": 1,
          "gyro_noise": 1, "mag_noise": 1})
-    test_rocket.acceleration = np.array([33333.3333, 33333.3333, 33333.3333])
+    test_rocket.world_acceleration = np.array([33333.3333, 33333.3333, 33333.3333])
     test_rocket.velocity = np.array([22222.2222, 22222.2222, 22222.2222])
     test_rocket.position = np.array([11111.1111, 11111.1111, 11111.1111])
     test_rocket.orientation = \
@@ -386,7 +386,7 @@ def test_full_length_write():
     test_rocket.baro_pressure = 11111.1111
     test_rocket.body_acceleration = np.array([33333.3333, 33333.3333, 33333.3333])
     test_rocket.body_mag_field = np.array([44444.4444, 44444.4444, 44444.4444])
-    
+
     gt_test_file = StringIO()
     sd_test_file = StringIO()
     data_gen.write_data_to_file(test_rocket, gt_test_file, sd_test_file)

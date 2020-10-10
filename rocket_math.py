@@ -126,8 +126,8 @@ class Rocket:
         self.world_acceleration = np.array([0.0, 0.0, 0.0])  # [ft/s^2]
         self.body_acceleration = np.array([0.0, 0.0, 0.0]) # [ft/s^2]
         self.orientation = np.array([1.0, 0.0, 0.0, 0.0])  # identity quat.
-        self.baro_pressure = 0  # [psi]
-        self.temperature = 0  # in fahrenheit
+        self.baro_pressure = 0  # [KPa]
+        self.temperature = 0  # [Celsius]
         self.altitude = 0  # [ft]
         self.body_mag_field = np.array([0.0, 0.0, 0.0]) # Waiting on model choice
         self.world_mag_field = np.array([0.0, 0.0, 0.0]) # Waiting on model choice
@@ -206,10 +206,10 @@ class Rocket:
                    and self.baro_pressure == other.baro_pressure \
                    and self.temperature == other.temperature \
                    and self.altitude == other.altitude \
-                   and all((self.body_mag_field - other.body_mag_field) 
+                   and all((self.body_mag_field - other.body_mag_field)
                            <= TOLERANCE) \
                    and all((self.world_mag_field - other.world_mag_field)
-                           <= TOLERANCE)            
+                           <= TOLERANCE)
         return False
 
     def gravity(self) -> float:
@@ -408,12 +408,12 @@ class Rocket:
         orientation_quaternion = Quaternion(self.orientation)
         orientation_quaternion.integrate(angular_rates, delta_time)
         return orientation_quaternion.elements
-    
+
     def update_baro_pressure(self):
         """
         Calculates the barometric pressure of the atmosphere around the Rocket.
         Uses NASA formulas:
-        https://web.archive.org/web/20200203025242/https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
+        https://www.grc.nasa.gov/WWW/K-12/airplane/atmosmet.html
 
         Returns
         ---------
@@ -432,8 +432,8 @@ class Rocket:
         """
         Calculates the temperature around the rocket, in celsius.
         Uses NASA formulas:
-        https://web.archive.org/web/20200203025242/https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
-        
+        https://www.grc.nasa.gov/WWW/K-12/airplane/atmosmet.html
+
         Returns
         -------
         temperature: float
