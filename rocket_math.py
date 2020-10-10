@@ -67,11 +67,14 @@ class Rocket:
     position: numpy.array
     position_enu: numpy.array
     velocity: numpy.array
-    acceleration: numpy.array
+    world_acceleration: numpy.array
+    body_acceleration: numpy.array
     orientation: numpy.array
     baro_pressure: float
     temperature: float
     altitude: float
+    body_mag_field: numpy.array
+    world_mag_field: numpy.array
 
     Notes
     -----
@@ -413,7 +416,7 @@ class Rocket:
         """
         Calculates the barometric pressure of the atmosphere around the Rocket.
         Uses NASA formulas:
-        https://www.grc.nasa.gov/WWW/K-12/airplane/atmosmet.html
+        https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
 
         Returns
         ---------
@@ -432,7 +435,7 @@ class Rocket:
         """
         Calculates the temperature around the rocket, in celsius.
         Uses NASA formulas:
-        https://www.grc.nasa.gov/WWW/K-12/airplane/atmosmet.html
+        https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
 
         Returns
         -------
@@ -444,7 +447,7 @@ class Rocket:
             temperature = 15.04 - 0.00649 * self.altitude
         else:
             temperature = -56.46
-        
+
         return temperature
 
     def update_body_acceleration(self):

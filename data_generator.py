@@ -94,7 +94,7 @@ def time_update(rocket, time_dict):
     updated_thrust = rocket.update_thrust(time_dict["current_time"])
     updated_mass = rocket.update_mass(time_dict["timestep"])
     updated_orientation = rocket.update_orientation(rm.ANGULAR_RATES,
-    time_dict["timestep"])                                                
+                                                time_dict["timestep"])
     updated_temperature = rocket.update_temperature()
     updated_baro_pressure = rocket.update_baro_pressure()
     updated_body_acceleration = rocket.update_body_acceleration()
@@ -136,8 +136,9 @@ def write_data_to_file(rocket, gt_file, sd_file):
     gt_data = ["", "", "", ""]
 
     for i, data_elem_gt in enumerate(new_gt_data):
-        gt_data[i] = np.array2string(data_elem_gt, precision=4, floatmode='fixed')
-        
+        gt_data[i] = np.array2string(data_elem_gt, precision=4, 
+                                            floatmode='fixed')
+
     gt_data_to_write = ' '.join(["{0: <33}".format(data) for data in gt_data])
     sensor_data_to_write = ' '.join(["{0: <33}".format(data) for data in sensor_data])
     gt_file.write(gt_data_to_write + "\n")
@@ -158,7 +159,7 @@ def main():
                            "Orientation\t"]
             headings_sd = ["Baro_Pressure\t", "Temperature\t",
                            "Acceleration\t",
-                           "Magnetic Field\t"]
+                           "Magnetic_Field\t"]
             for (heading_gt, heading_sd) in zip(headings_gt, headings_sd):
                 col_titles_gt = heading_gt.split()
                 col_titles_sd = heading_sd.split()

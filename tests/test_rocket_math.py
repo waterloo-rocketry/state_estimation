@@ -418,7 +418,7 @@ def test_update_acceleration_with_constant_update_acceleration(mocker):
     test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "prop_mass": 0.5}
     test_rocket.thrust = np.array(
         [0, 0, test_rocket.mass["total_mass"] * 32.1389])
-    test_rocket.acceleration = np.array([0, 0, 0])
+    test_rocket.world_acceleration = np.array([0, 0, 0])
     mocker.patch('rocket_math.Rocket.drag_force',
                  return_value=np.array([0, 0, 0]))
     mocker.patch('rocket_math.Rocket.gravity',
@@ -463,7 +463,7 @@ def test_update_acceleration_with_thrust_and_drag_floats(mocker):
     Test update_acceleration() for thrust and drag force vectors with floats.
     """
     test_rocket = rm.Rocket()
-    test_rocket.acceleration = np.array([0, 0, 0])
+    test_rocket.world_acceleration = np.array([0, 0, 0])
     test_rocket.mass = {"total_mass": 1, "body_mass": 0.5, "prop_mass": 0.5}
     test_rocket.thrust = np.array([10.5, 11.5, 12.5])
     mocker.patch('rocket_math.Rocket.drag_force',
@@ -482,7 +482,7 @@ def test_update_velocity_with_no_vel_or_accel():
     """
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([0, 0, 0])
-    test_rocket.acceleration = np.array([0, 0, 0])
+    test_rocket.world_acceleration = np.array([0, 0, 0])
     delta_time = 1
     assert np.all(test_rocket.update_velocity(delta_time) ==
                   np.array([0, 0, 0]))
@@ -495,7 +495,7 @@ def test_update_velocity_with_pos_int_vel_and_no_time_change():
     """
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([1, 1, 1])
-    test_rocket.acceleration = np.array([1, 1, 1])
+    test_rocket.world_acceleration = np.array([1, 1, 1])
     delta_time = 0
     assert np.all(test_rocket.update_velocity(delta_time) ==
                   np.array([1, 1, 1]))
@@ -508,7 +508,7 @@ def test_update_velocity_with_pos_vel_and_no_accel_ints():
     """
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([1, 1, 1])
-    test_rocket.acceleration = np.array([0, 0, 0])
+    test_rocket.world_acceleration = np.array([0, 0, 0])
     delta_time = 1
     assert np.all(test_rocket.update_velocity(delta_time) ==
                   np.array([1, 1, 1]))
@@ -521,7 +521,7 @@ def test_update_velocity_with_pos_vel_and_accel_ints():
     """
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([1, 1, 1])
-    test_rocket.acceleration = np.array([1, 1, 1])
+    test_rocket.world_acceleration = np.array([1, 1, 1])
     delta_time = 1
     assert np.all(test_rocket.update_velocity(delta_time) ==
                   np.array([2, 2, 2]))
@@ -534,7 +534,7 @@ def test_update_velocity_with_neg_vel_and_accel_ints():
     """
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([-1, -1, -1])
-    test_rocket.acceleration = np.array([-1, -1, -1])
+    test_rocket.world_acceleration = np.array([-1, -1, -1])
     delta_time = 1
     assert np.all(test_rocket.update_velocity(delta_time) ==
                   np.array([-2, -2, -2]))
@@ -548,7 +548,7 @@ def test_update_velocity_with_pos_vel_and_big_neg_accel_ints():
     """
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([1, 1, 1])
-    test_rocket.acceleration = np.array([-3, -3, -3])
+    test_rocket.world_acceleration = np.array([-3, -3, -3])
     delta_time = 1
     assert np.all(test_rocket.update_velocity(delta_time) ==
                   np.array([-2, -2, -2]))
@@ -562,7 +562,7 @@ def test_update_velocity_with_neg_vel_and_big_pos_accel_ints():
     """
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([-1, -1, -1])
-    test_rocket.acceleration = np.array([3, 3, 3])
+    test_rocket.world_acceleration = np.array([3, 3, 3])
     delta_time = 1
     assert np.all(test_rocket.update_velocity(delta_time) ==
                   np.array([2, 2, 2]))
@@ -575,7 +575,7 @@ def test_update_velocity_with_big_pos_vel_and_neg_accel_ints():
     """
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([3, 3, 3])
-    test_rocket.acceleration = np.array([-1, -1, -1])
+    test_rocket.world_acceleration = np.array([-1, -1, -1])
     delta_time = 1
     assert np.all(test_rocket.update_velocity(delta_time) ==
                   np.array([2, 2, 2]))
@@ -588,7 +588,7 @@ def test_update_velocity_with_big_neg_vel_and_pos_accel_ints():
     """
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([-3, -3, -3])
-    test_rocket.acceleration = np.array([1, 1, 1])
+    test_rocket.world_acceleration = np.array([1, 1, 1])
     delta_time = 1
     assert np.all(test_rocket.update_velocity(delta_time) ==
                   np.array([-2, -2, -2]))
@@ -600,7 +600,7 @@ def test_update_velocity_with_vel_and_accel_floats():
     """
     test_rocket = rm.Rocket()
     test_rocket.velocity = np.array([1.5, 2.5, 3.5])
-    test_rocket.acceleration = np.array([1.5, 2.5, 3.5])
+    test_rocket.world_acceleration = np.array([1.5, 2.5, 3.5])
     delta_time = 1
     assert np.all(test_rocket.update_velocity(delta_time) ==
                   np.array([3, 5, 7]))
