@@ -32,7 +32,7 @@ def is_any_negative(array):
     bool
         True if there is a  negative element, false otherwise.
     """
-    return any(array < 0)
+    return any([True if x < 0 else False for x in array])
 
 
 # TODO: add exception blocks

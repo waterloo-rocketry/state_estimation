@@ -1044,7 +1044,7 @@ def test_update_orientation_from_non_identity_quat():
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
     assert np.all(new_orientation == orientation_after_update)
 
-test_update_orientation_from_non_identity_quat()
+
 # Testing functions for finding temperature
 def test_temperature_at_ground():
     test_rocket = rm.Rocket()
