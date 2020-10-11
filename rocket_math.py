@@ -279,9 +279,11 @@ class Rocket:
     #  be in meters or feet (possibly in meters currently)
     # TODO: determine where this equation was determined
     # Alternative to other air density calculation [soon to be deprecated]
+    def air_density2(self) -> float:
+        return 1.22 * (0.9 ** (self. altitude/ 1000))
+
     def air_density(self) -> float:
-        alt = self.altitude
-        return 1.22 * (0.9 ** (alt / 1000))
+        return self.baro_pressure / (1718 * (self.temperature + 459.7))
 
     # TODO [Later]: if speeds of rocket are transonic/supersonic, wave drag
     #  may be a thing to consider
