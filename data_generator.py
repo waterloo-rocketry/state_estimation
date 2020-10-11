@@ -128,7 +128,7 @@ def write_data_to_file(rocket, gt_file, sd_file):
     """
     new_gt_data = np.array(
         [rocket.position, rocket.velocity,
-         rocket.world_acceleration, rocket.orientation])
+         rocket.world_acceleration, rocket.orientation], dtype=object)
     sensor_data = np.array(
         [f"{rocket.baro_pressure:.4f}", f"{rocket.temperature:.4f}",
         np.array2string(rocket.body_acceleration, precision=4, floatmode='fixed'), 
