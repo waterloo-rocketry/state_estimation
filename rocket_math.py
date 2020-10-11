@@ -275,15 +275,19 @@ class Rocket:
             return np.array([0, 0, 0])
         return self.velocity / np.linalg.norm(self.velocity)
 
-    # TODO: check if what the output air density and fix if the input should
-    #  be in meters or feet (possibly in meters currently)
-    # TODO: determine where this equation was determined
-    # Alternative to other air density calculation [soon to be deprecated]
-    def air_density2(self) -> float:
-        return 1.22 * (0.9 ** (self. altitude/ 1000))
-
     def air_density(self) -> float:
-        return self.baro_pressure / (1718 * (self.temperature + 459.7))
+        """
+        Calculates the air density of the atmosphere around the Rocket.
+        Uses NASA formula:
+        https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
+
+        Returns
+        -------
+        float
+            Air density of the atmosphere around the rocket, in kilogram per
+            cubic meter [kg/m^3].
+        """
+        return self.baro_pressure / (0.2869 * (self.temperature + 273.1))
 
     # TODO [Later]: if speeds of rocket are transonic/supersonic, wave drag
     #  may be a thing to consider

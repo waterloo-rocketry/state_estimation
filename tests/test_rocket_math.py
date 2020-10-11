@@ -200,6 +200,42 @@ def test_velocity_uv_with_floats():
          (4.5 / np.sqrt(38.75))]))
 
 
+# Testing functions for air_density().
+def test_air_density_at_ground():
+    test_rocket = rm.Rocket()
+    test_rocket.temperature = 15.04
+    test_rocket.baro_pressure = 101.4009
+    assert abs(test_rocket.air_density() - 1.2266) <= rm.TOLERANCE
+
+
+def test_air_density_at_100_m():
+    test_rocket = rm.Rocket()
+    test_rocket.temperature = 14.391
+    test_rocket.baro_pressure = 100.2062
+    assert abs(test_rocket.air_density() - 1.2149) <= rm.TOLERANCE
+
+
+def test_air_density_at_1000_m():
+    test_rocket = rm.Rocket()
+    test_rocket.temperature = 8.55
+    test_rocket.baro_pressure = 89.9581
+    assert abs(test_rocket.air_density() - 1.1133) <= rm.TOLERANCE
+
+
+def test_air_density_at_10000_m():
+    test_rocket = rm.Rocket()
+    test_rocket.temperature = -49.86
+    test_rocket.baro_pressure = 26.5162
+    assert abs(test_rocket.air_density() - 0.4140) <= rm.TOLERANCE
+
+
+def test_air_density_at_20000_m():
+    test_rocket = rm.Rocket()
+    test_rocket.temperature = -56.46
+    test_rocket.baro_pressure = 5.5298
+    assert abs(test_rocket.air_density() - 0.08897) <= rm.TOLERANCE
+
+
 # Testing functions for drag_force().
 def test_drag_with_no_velocity(mocker):
     """
