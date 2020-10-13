@@ -459,7 +459,7 @@ class Rocket:
         -------
         proper_acceleration
             Numpy array representing the body (proper) acceleration
-            of the rocket
+            of the rocket in m/s^2.
         """
         quaternion = Quaternion(self.orientation)
         body_acceleration = quaternion.rotate(self.world_acceleration)
