@@ -18,6 +18,7 @@ SD_PATH = os.path.join(ROOT_PATH, "generated_files", "sensor_data.txt")
 
 # -----------------------------------------------------------
 
+
 def is_any_negative(array):
     """
     Determines if any element of an array is negative.
@@ -31,10 +32,7 @@ def is_any_negative(array):
     bool
         True if there is a  negative element, false otherwise.
     """
-    for element in array:
-        if element < 0:
-            return True
-    return False
+    return any(array < 0)
 
 
 # TODO: add exception blocks
@@ -78,7 +76,6 @@ def init_rocket_state() -> rm.Rocket:
                                          "mag_noise": float(mag_noise)})
 
 
-# TODO: add sensor updates
 def time_update(rocket, time_dict):
     """
     Updates the state of the Rocket for every timestep.
@@ -97,19 +94,25 @@ def time_update(rocket, time_dict):
     updated_thrust = rocket.update_thrust(time_dict["current_time"])
     updated_mass = rocket.update_mass(time_dict["timestep"])
     updated_orientation = rocket.update_orientation(rm.ANGULAR_RATES,
-                                                    time_dict["timestep"])
+                                                time_dict["timestep"])
+    updated_temperature = rocket.update_temperature()
+    updated_baro_pressure = rocket.update_baro_pressure()
+    updated_body_acceleration = rocket.update_body_acceleration()
+    updated_mag_field = rocket.update_magnetic_field()
 
     # Update the Rocket object
     rocket.position = updated_position
     rocket.velocity = updated_velocity
-    rocket.acceleration = updated_acceleration
+    rocket.world_acceleration = updated_acceleration
     rocket.thrust = updated_thrust
     rocket.mass = updated_mass
     rocket.orientation = updated_orientation
     rocket.altitude = rocket.position[2]
+    rocket.temperature = updated_temperature
+    rocket.baro_pressure = updated_baro_pressure
+    rocket.body_mag_field = updated_mag_field
+    rocket.body_acceleration = updated_body_acceleration
 
-
-# TODO: add writing to sensor_data files once sensor methods are implemented
 def write_data_to_file(rocket, gt_file, sd_file):
     """
     Writes the info of the Rocket to the ground_truth and sensor_data files.
@@ -123,16 +126,18 @@ def write_data_to_file(rocket, gt_file, sd_file):
     sd_file: io.TestIOWrapper
         sensor_data file to write Rocket info to.
     """
-    new_data_gt = np.array(
-        [rocket.position, rocket.velocity,
-         rocket.acceleration, rocket.orientation])
-    data_gt = ["", "", "", ""]
-    for i, data_elem_gt in enumerate(new_data_gt):
-        data_gt[i] = np.array2string(data_elem_gt, precision=4,
-                                     floatmode='fixed')
-    data_to_write = ' '.join(["{0: <33}".format(data) for data in data_gt])
-    gt_file.write(data_to_write + "\n")
-    sd_file.write('')  # Add what is being written to sensor_data file here
+    new_gt_data = [rocket.position, rocket.velocity, 
+        rocket.world_acceleration, rocket.orientation]
+
+    sensor_data = [f"{rocket.baro_pressure:.4f}", f"{rocket.temperature:.4f}",
+        np.array2string(rocket.body_acceleration, precision=4, floatmode='fixed'),
+        np.array2string(rocket.body_mag_field, precision=4, floatmode='fixed')]
+
+    gt_data = [np.array2string(e, precision=4, floatmode='fixed') for e in new_gt_data]
+    gt_data_to_write = ' '.join(["{0: <33}".format(data) for data in gt_data])
+    sensor_data_to_write = ' '.join(["{0: <33}".format(data) for data in sensor_data])
+    gt_file.write(gt_data_to_write + "\n")
+    sd_file.write(sensor_data_to_write + "\n")
 
 
 # TODO: Check if the title output can be shortened
@@ -148,8 +153,8 @@ def main():
             headings_gt = ["Position\t", "Velocity\t", "Acceleration\t",
                            "Orientation\t"]
             headings_sd = ["Baro_Pressure\t", "Temperature\t",
-                           "Acceleration\t", "Angular_Rates\t",
-                           "Magnetic Field\t"]
+                           "Acceleration\t",
+                           "Magnetic_Field\t"]
             for (heading_gt, heading_sd) in zip(headings_gt, headings_sd):
                 col_titles_gt = heading_gt.split()
                 col_titles_sd = heading_sd.split()
@@ -157,7 +162,7 @@ def main():
                 initialize_headings_gt = ' '.join(
                     ['{0: <34}'.format(title) for title in col_titles_gt])
                 initialize_headings_sd = ' '.join(
-                    ['{0: <16}'.format(title) for title in col_titles_sd])
+                    ['{0: <34}'.format(title) for title in col_titles_sd])
 
                 ground_truth.write(initialize_headings_gt)
                 sensor_data.write(initialize_headings_sd)

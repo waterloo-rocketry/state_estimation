@@ -67,11 +67,14 @@ class Rocket:
     position: numpy.array
     position_enu: numpy.array
     velocity: numpy.array
-    acceleration: numpy.array
+    world_acceleration: numpy.array
+    body_acceleration: numpy.array
     orientation: numpy.array
     baro_pressure: float
     temperature: float
     altitude: float
+    body_mag_field: numpy.array
+    world_mag_field: numpy.array
 
     Notes
     -----
@@ -123,11 +126,14 @@ class Rocket:
         self.position = np.array([0.0, 0.0, 0.0])  # [ft] (cartesian vector)
         self.position_enu = np.array([0.0, 0.0, 0.0])  # [ft]
         self.velocity = np.array([0.0, 0.0, 0.0])  # [ft/s]
-        self.acceleration = np.array([0.0, 0.0, 0.0])  # [ft/s^2]
+        self.world_acceleration = np.array([0.0, 0.0, 0.0])  # [ft/s^2]
+        self.body_acceleration = np.array([0.0, 0.0, 0.0]) # [ft/s^2]
         self.orientation = np.array([1.0, 0.0, 0.0, 0.0])  # identity quat.
-        self.baro_pressure = 0  # [psi]
-        self.temperature = 0  # in fahrenheit
+        self.baro_pressure = 0  # [KPa]
+        self.temperature = 0  # [Celsius]
         self.altitude = 0  # [ft]
+        self.body_mag_field = np.array([0.0, 0.0, 0.0]) # Waiting on model choice
+        self.world_mag_field = np.array([0.0, 0.0, 0.0]) # Waiting on model choice
 
     def __repr__(self):
         """
@@ -162,12 +168,15 @@ class Rocket:
                f"{self.sensor_noise['mag_noise']}\n\t}}\n\n\t\tOUTPUTS\n\t" \
                f"Position:\t{self.position}\n\tPosition ENU:\t" \
                f"{self.position_enu}\n\tVelocity:\t" \
-               f"{self.velocity}\n\tAcceleration:\t" \
-               f"{self.acceleration}\n\tOrientation:\t" \
+               f"{self.velocity}\n\tWorld Acceleration:\t" \
+               f"{self.world_acceleration}\n\tBody Acceleration:\t" \
+               f"{self.body_acceleration}\n\tOrientation:\t" \
                f"{self.orientation}\n\tBaro Pressure:\t" \
                f"{self.baro_pressure}\n\tTemperature:\t" \
                f"{self.temperature}\n\tAltitude:\t" \
-               f"{self.altitude}"  # Note: still unsure about formatting.
+               f"{self.altitude}\n\tBody Magnetic Field:\t" \
+               f"{self.body_mag_field}\n\tWorld Magnetic Field:\t" \
+               f"{self.world_mag_field}"    # Note: still unsure about formatting.
 
     def __eq__(self, other):
         """
@@ -193,13 +202,17 @@ class Rocket:
                    and all((self.position_enu - other.position_enu)
                            <= TOLERANCE) \
                    and all((self.velocity - other.velocity) <= TOLERANCE) \
-                   and all((self.acceleration - other.acceleration)
+                   and all((self.world_acceleration - other.world_acceleration)
                            <= TOLERANCE) \
                    and all((self.orientation - other.orientation)
                            <= TOLERANCE) \
                    and self.baro_pressure == other.baro_pressure \
                    and self.temperature == other.temperature \
-                   and self.altitude == other.altitude
+                   and self.altitude == other.altitude \
+                   and all((self.body_mag_field - other.body_mag_field)
+                           <= TOLERANCE) \
+                   and all((self.world_mag_field - other.world_mag_field)
+                           <= TOLERANCE)
         return False
 
     def gravity(self) -> float:
@@ -330,7 +343,7 @@ class Rocket:
                 self.mass["total_mass"] * self.gravity())
         if any(resultant_force):
             return resultant_force / self.mass["total_mass"]
-        return self.acceleration
+        return self.world_acceleration
 
     def update_velocity(self, delta_time) -> np.array([]):
         """
@@ -349,7 +362,7 @@ class Rocket:
             Numpy array (containing data with float type) representing the
             velocity of the Rocket object in ft/s.
         """
-        return self.velocity + self.acceleration * delta_time
+        return self.velocity + self.world_acceleration * delta_time
 
     def update_position(self, delta_time) -> np.array([]):
         """
@@ -398,6 +411,73 @@ class Rocket:
         orientation_quaternion = Quaternion(self.orientation)
         orientation_quaternion.integrate(angular_rates, delta_time)
         return orientation_quaternion.elements
+
+    def update_baro_pressure(self):
+        """
+        Calculates the barometric pressure of the atmosphere around the Rocket.
+        Uses NASA formulas:
+        https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
+
+        Returns
+        ---------
+        baro_pressure: float
+            Barometric pressure of the atmosphere around the rocket, in kilopascals.
+        """
+        # Use NASA formula to calculate barometric pressure
+        if self.altitude < 11000:
+            baro_pressure = 101.29 * ((self.temperature + 273.1) / 288.08) ** 5.256
+        else:
+            baro_pressure = 22.65 * np.exp(1.73 - 0.000157 * self.altitude)
+
+        return baro_pressure
+
+    def update_temperature(self):
+        """
+        Calculates the temperature around the rocket, in celsius.
+        Uses NASA formulas:
+        https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
+
+        Returns
+        -------
+        temperature: float
+            Temperature of the air around the rocket, in celsius.
+        """
+        # Use NASA formula to calculate temperature
+        if self.altitude < 11000:
+            temperature = 15.04 - 0.00649 * self.altitude
+        else:
+            temperature = -56.46
+
+        return temperature
+
+    def update_body_acceleration(self):
+        """
+        Calculates the body (proper) acceleration of the rocket,
+        which is what the accelerometer measures.
+
+        Returns
+        -------
+        proper_acceleration
+            Numpy array representing the body (proper) acceleration
+            of the rocket in m/s^2.
+        """
+        quaternion = Quaternion(self.orientation)
+        body_acceleration = quaternion.rotate(self.world_acceleration)
+        return body_acceleration
+
+    def update_magnetic_field(self):
+        """
+        Calculates the magnetic field around the rocket (Tesla)
+
+        Returns
+        -------
+        body_magnetic_field
+            Numpy array representing the magnetic field around
+            the rocket
+        """
+        quaternion = Quaternion(self.orientation)
+        body_magnetic_field = quaternion.rotate(self.world_mag_field)
+        return body_magnetic_field
 
     # Converts the position of the rocket for local cartesian to ENU [ft]
     def cart_to_enu(self) -> np.array([]):

@@ -13,3 +13,5 @@
 /build
 /captures
 .externalNativeBuild
+__pycache__/
+.pytest_cache/
