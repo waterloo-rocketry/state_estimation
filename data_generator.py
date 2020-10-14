@@ -32,7 +32,7 @@ def is_any_negative(array):
     bool
         True if there is a  negative element, false otherwise.
     """
-    return any([True if x < 0 else False for x in array])
+    return any(array < 0)
 
 
 # TODO: add exception blocks
@@ -126,19 +126,14 @@ def write_data_to_file(rocket, gt_file, sd_file):
     sd_file: io.TestIOWrapper
         sensor_data file to write Rocket info to.
     """
-    new_gt_data = np.array(
-        [rocket.position, rocket.velocity,
-         rocket.world_acceleration, rocket.orientation])
-    sensor_data = np.array(
-        [f"{rocket.baro_pressure:.4f}", f"{rocket.temperature:.4f}",
-        np.array2string(rocket.body_acceleration, precision=4, floatmode='fixed'), 
-        np.array2string(rocket.body_mag_field, precision=4, floatmode='fixed')])
-    gt_data = ["", "", "", ""]
+    new_gt_data = [rocket.position, rocket.velocity, 
+        rocket.world_acceleration, rocket.orientation]
 
-    for i, data_elem_gt in enumerate(new_gt_data):
-        gt_data[i] = np.array2string(data_elem_gt, precision=4, 
-                                            floatmode='fixed')
+    sensor_data = [f"{rocket.baro_pressure:.4f}", f"{rocket.temperature:.4f}",
+        np.array2string(rocket.body_acceleration, precision=4, floatmode='fixed'),
+        np.array2string(rocket.body_mag_field, precision=4, floatmode='fixed')]
 
+    gt_data = [np.array2string(e, precision=4, floatmode='fixed') for e in new_gt_data]
     gt_data_to_write = ' '.join(["{0: <33}".format(data) for data in gt_data])
     sensor_data_to_write = ' '.join(["{0: <33}".format(data) for data in sensor_data])
     gt_file.write(gt_data_to_write + "\n")

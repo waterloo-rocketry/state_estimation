@@ -459,17 +459,17 @@ class Rocket:
     def update_body_acceleration(self):
         """
         Calculates the body (proper) acceleration of the rocket,
-        that is what the accelerometer measures.
+        which is what the accelerometer measures.
 
         Returns
         -------
         proper_acceleration
-            Numpy array representing the body (proper) acceleration 
-            of the rocket
+            Numpy array representing the body (proper) acceleration
+            of the rocket in m/s^2.
         """
         quaternion = Quaternion(self.orientation)
-        proper_acceleration = quaternion.rotate(self.world_acceleration)
-        return proper_acceleration
+        body_acceleration = quaternion.rotate(self.world_acceleration)
+        return body_acceleration
 
     def update_magnetic_field(self):
         """

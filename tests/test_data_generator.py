@@ -355,9 +355,8 @@ def test_two_writes():
     valid_file.close()
     valid_sensor_file.close()
     assert gt_file_value1 == valid1 and gt_file_value2 == valid2 and \
-    sd_file_value1 == sensor_valid1 and sd_file_value2 == sensor_valid2
+        sd_file_value1 == sensor_valid1 and sd_file_value2 == sensor_valid2
 
-test_two_writes()
 
 def test_full_length_write():
     """
