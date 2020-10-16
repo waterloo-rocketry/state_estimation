@@ -44,9 +44,9 @@ This will generate 2 files: `/generated_files/ground_truth.txt` and `/generated_
 ### Unit Tests
 The project has unit tests stored in the `/tests` directory. To run and check these tests, run this command in a terminal (in the project directory):
 ```
-py.test
+pytest
 ```
-For additional information about the `py.test` package and how to used it, check out their [documentation](https://docs.pytest.org/en/stable/).
+For additional information about the `pytest` package and how to used it, check out their [documentation](https://docs.pytest.org/en/stable/).
 
 ### Contributing to the Project
 New contributors are always welcome! Feel free to assign yourself to any issues marked with `good first issue`. If you see an issue that is not listed but needs addressing, please open an issue and discuss what you would like to change. If you are contributing to the project, make sure unit tests are written or updated to address your contributions. 
