@@ -36,7 +36,7 @@ MASS_LOSS = 0.05
 
 # The rocket's fixed angular velocities in rad/s
 X_ANGULAR_RATE = 0  # Current coordinate system yaw rate
-Y_ANGULAR_RATE = np.pi/180  # Current coordinate system pitch rate (1 degree/s)
+Y_ANGULAR_RATE = np.pi / 180  # Current coordinate system pitch rate (1 degree/s)
 Z_ANGULAR_RATE = np.pi  # Current coordinate system roll rate (180 degree/s)
 ANGULAR_RATES = np.array([X_ANGULAR_RATE, Y_ANGULAR_RATE, Z_ANGULAR_RATE])
 
@@ -127,13 +127,15 @@ class Rocket:
         self.position_enu = np.array([0.0, 0.0, 0.0])  # [ft]
         self.velocity = np.array([0.0, 0.0, 0.0])  # [ft/s]
         self.world_acceleration = np.array([0.0, 0.0, 0.0])  # [ft/s^2]
-        self.body_acceleration = np.array([0.0, 0.0, 0.0]) # [ft/s^2]
+        self.body_acceleration = np.array([0.0, 0.0, 0.0])  # [ft/s^2]
         self.orientation = np.array([1.0, 0.0, 0.0, 0.0])  # identity quat.
         self.baro_pressure = 0  # [KPa]
         self.temperature = 0  # [Celsius]
         self.altitude = 0  # [ft]
-        self.body_mag_field = np.array([0.0, 0.0, 0.0]) # Waiting on model choice
-        self.world_mag_field = np.array([0.0, 0.0, 0.0]) # Waiting on model choice
+        self.body_mag_field = np.array(
+            [0.0, 0.0, 0.0])  # Waiting on model choice
+        self.world_mag_field = np.array(
+            [0.0, 0.0, 0.0])  # Waiting on model choice
 
     def __repr__(self):
         """
@@ -176,7 +178,7 @@ class Rocket:
                f"{self.temperature}\n\tAltitude:\t" \
                f"{self.altitude}\n\tBody Magnetic Field:\t" \
                f"{self.body_mag_field}\n\tWorld Magnetic Field:\t" \
-               f"{self.world_mag_field}"    # Note: still unsure about formatting.
+               f"{self.world_mag_field}"  # Note: still unsure about formatting.
 
     def __eq__(self, other):
         """
@@ -275,13 +277,19 @@ class Rocket:
             return np.array([0, 0, 0])
         return self.velocity / np.linalg.norm(self.velocity)
 
-    # TODO: check if what the output air density and fix if the input should
-    #  be in meters or feet (possibly in meters currently)
-    # TODO: determine where this equation was determined
-    # Alternative to other air density calculation [soon to be deprecated]
     def air_density(self) -> float:
-        alt = self.altitude
-        return 1.22 * (0.9 ** (alt / 1000))
+        """
+        Calculates the air density of the atmosphere around the Rocket.
+        Uses NASA formula:
+        https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
+
+        Returns
+        -------
+        float
+            Air density of the atmosphere around the rocket, in kilogram per
+            cubic meter [kg/m^3].
+        """
+        return self.baro_pressure / (0.2869 * (self.temperature + 273.1))
 
     # TODO [Later]: if speeds of rocket are transonic/supersonic, wave drag
     #  may be a thing to consider
@@ -425,7 +433,8 @@ class Rocket:
         """
         # Use NASA formula to calculate barometric pressure
         if self.altitude < 11000:
-            baro_pressure = 101.29 * ((self.temperature + 273.1) / 288.08) ** 5.256
+            baro_pressure = 101.29 * (
+                    (self.temperature + 273.1) / 288.08) ** 5.256
         else:
             baro_pressure = 22.65 * np.exp(1.73 - 0.000157 * self.altitude)
 

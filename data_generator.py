@@ -94,7 +94,7 @@ def time_update(rocket, time_dict):
     updated_thrust = rocket.update_thrust(time_dict["current_time"])
     updated_mass = rocket.update_mass(time_dict["timestep"])
     updated_orientation = rocket.update_orientation(rm.ANGULAR_RATES,
-                                                time_dict["timestep"])
+                                                    time_dict["timestep"])
     updated_temperature = rocket.update_temperature()
     updated_baro_pressure = rocket.update_baro_pressure()
     updated_body_acceleration = rocket.update_body_acceleration()
@@ -113,6 +113,7 @@ def time_update(rocket, time_dict):
     rocket.body_mag_field = updated_mag_field
     rocket.body_acceleration = updated_body_acceleration
 
+
 def write_data_to_file(rocket, gt_file, sd_file):
     """
     Writes the info of the Rocket to the ground_truth and sensor_data files.
@@ -126,16 +127,20 @@ def write_data_to_file(rocket, gt_file, sd_file):
     sd_file: io.TestIOWrapper
         sensor_data file to write Rocket info to.
     """
-    new_gt_data = [rocket.position, rocket.velocity, 
-        rocket.world_acceleration, rocket.orientation]
+    new_gt_data = [rocket.position, rocket.velocity,
+                   rocket.world_acceleration, rocket.orientation]
 
     sensor_data = [f"{rocket.baro_pressure:.4f}", f"{rocket.temperature:.4f}",
-        np.array2string(rocket.body_acceleration, precision=4, floatmode='fixed'),
-        np.array2string(rocket.body_mag_field, precision=4, floatmode='fixed')]
+                   np.array2string(rocket.body_acceleration, precision=4,
+                                   floatmode='fixed'),
+                   np.array2string(rocket.body_mag_field, precision=4,
+                                   floatmode='fixed')]
 
-    gt_data = [np.array2string(e, precision=4, floatmode='fixed') for e in new_gt_data]
+    gt_data = [np.array2string(e, precision=4, floatmode='fixed') for e in
+               new_gt_data]
     gt_data_to_write = ' '.join(["{0: <33}".format(data) for data in gt_data])
-    sensor_data_to_write = ' '.join(["{0: <33}".format(data) for data in sensor_data])
+    sensor_data_to_write = ' '.join(
+        ["{0: <33}".format(data) for data in sensor_data])
     gt_file.write(gt_data_to_write + "\n")
     sd_file.write(sensor_data_to_write + "\n")
 

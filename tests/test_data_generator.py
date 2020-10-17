@@ -336,7 +336,7 @@ def test_two_writes():
                                  "50.0000                           "
                                  "[0.0000 0.0000 2.0000]            "
                                  "[0.0000 0.0000 2.0000]           \n")
-    
+
     test_rocket.world_acceleration = np.array([0, 0, 149.7620])
     test_rocket.velocity = np.array([0, 0, 1.4976])
     test_rocket.position = np.array([0, 0, 0.0150])
@@ -355,7 +355,7 @@ def test_two_writes():
     valid_file.close()
     valid_sensor_file.close()
     assert gt_file_value1 == valid1 and gt_file_value2 == valid2 and \
-        sd_file_value1 == sensor_valid1 and sd_file_value2 == sensor_valid2
+           sd_file_value1 == sensor_valid1 and sd_file_value2 == sensor_valid2
 
 
 def test_full_length_write():
@@ -375,14 +375,16 @@ def test_full_length_write():
         np.array([0, 0, 0]), 100,
         {"press_noise": 1, "temp_noise": 1, "accel_noise": 1,
          "gyro_noise": 1, "mag_noise": 1})
-    test_rocket.world_acceleration = np.array([33333.3333, 33333.3333, 33333.3333])
+    test_rocket.world_acceleration = np.array(
+        [33333.3333, 33333.3333, 33333.3333])
     test_rocket.velocity = np.array([22222.2222, 22222.2222, 22222.2222])
     test_rocket.position = np.array([11111.1111, 11111.1111, 11111.1111])
     test_rocket.orientation = \
         np.array([44444.4444, 44444.4444, 44444.4444, 44444.4444])
     test_rocket.temperature = 22222.2222
     test_rocket.baro_pressure = 11111.1111
-    test_rocket.body_acceleration = np.array([33333.3333, 33333.3333, 33333.3333])
+    test_rocket.body_acceleration = np.array(
+        [33333.3333, 33333.3333, 33333.3333])
     test_rocket.body_mag_field = np.array([44444.4444, 44444.4444, 44444.4444])
 
     gt_test_file = StringIO()
