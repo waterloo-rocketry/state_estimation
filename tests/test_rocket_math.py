@@ -8,45 +8,43 @@ import rocket_math as rm
 '''
 Notes:
 - For all calculations, there will be an tolerance of 0.001.
-- No rocket_air_density unit test since the current method for
-  determining/testing air density needs to be changed.
 '''
 
 
 # Testing functions for gravity().
 def test_gravity_at_ground():
     test_rocket = rm.Rocket()
-    assert abs(test_rocket.gravity() - 32.1389) <= rm.TOLERANCE
+    assert abs(test_rocket.gravity() - 9.7559) <= rm.TOLERANCE
 
 
-def test_gravity_at_100_ft():
+def test_gravity_at_100_m():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 100
-    assert abs(test_rocket.gravity() - 32.1386) <= rm.TOLERANCE
+    assert abs(test_rocket.gravity() - 9.7556) <= rm.TOLERANCE
 
 
-def test_gravity_at_1000_ft():
+def test_gravity_at_1000_m():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 1000
-    assert abs(test_rocket.gravity() - 32.1358) <= rm.TOLERANCE
+    assert abs(test_rocket.gravity() - 9.7529) <= rm.TOLERANCE
 
 
-def test_gravity_at_10000_ft():
+def test_gravity_at_10000_m():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 10000
-    assert abs(test_rocket.gravity() - 32.1082) <= rm.TOLERANCE
+    assert abs(test_rocket.gravity() - 9.7254) <= rm.TOLERANCE
 
 
-def test_gravity_at_100000_ft():
+def test_gravity_at_100000_m():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 100000
-    assert abs(test_rocket.gravity() - 31.8336) <= rm.TOLERANCE
+    assert abs(test_rocket.gravity() - 9.4571) <= rm.TOLERANCE
 
 
-def test_gravity_at_float_num_ft():
+def test_gravity_at_float_num_m():
     test_rocket = rm.Rocket()
     test_rocket.altitude = 5432.10
-    assert abs(test_rocket.gravity() - 32.1222) <= rm.TOLERANCE
+    assert abs(test_rocket.gravity() - 9.7393) <= rm.TOLERANCE
 
 
 # Testing functions for update_mass().
@@ -62,12 +60,8 @@ def test_update_mass_above_mass_loss_threshold():
     expected_mass = {"total_mass": 110 - rm.MASS_LOSS * timestep,
                      "body_mass": 55,
                      "prop_mass": 55 - rm.MASS_LOSS * timestep}
-    assert all((test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
+    assert all(abs(test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
                for key in test_rocket.mass)
-    # assert test_rocket.update_mass(timestep) == {
-    #    "total_mass": 110 - rm.MASS_LOSS * timestep,
-    #    "body_mass": 55,
-    #   "prop_mass": 55 - rm.MASS_LOSS * timestep}
 
 
 def test_secondary_update_mass_above_mass_loss_threshold():
@@ -84,7 +78,7 @@ def test_secondary_update_mass_above_mass_loss_threshold():
     expected_mass = {"total_mass": 110 - (2 * rm.MASS_LOSS * timestep),
                      "body_mass": 55,
                      "prop_mass": 55 - (2 * rm.MASS_LOSS * timestep)}
-    assert all((test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
+    assert all(abs(test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
                for key in test_rocket.mass)
 
 
@@ -101,7 +95,7 @@ def test_update_mass_below_mass_loss_threshold():
     expected_mass = {"total_mass": 100,
                      "body_mass": 100,
                      "prop_mass": 0}
-    assert all((test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
+    assert all(abs(test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
                for key in test_rocket.mass)
 
 
@@ -117,7 +111,7 @@ def test_secondary_update_mass_below_mass_loss_threshold():
     expected_mass = {"total_mass": 100,
                      "body_mass": 100,
                      "prop_mass": 0}
-    assert all((test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
+    assert all(abs(test_rocket.mass[key] - expected_mass[key]) <= rm.TOLERANCE
                for key in test_rocket.mass)
 
 
@@ -261,8 +255,8 @@ def test_drag_with_positive_int_velocity(mocker):
                  return_value=np.array(
                      [(1 / np.sqrt(3)), (1 / np.sqrt(3)), (1 / np.sqrt(3))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.7204)
-    assert np.all((test_rocket.drag_force() - np.array(
-        [0.0367, 0.0367, 0.0367])) <= rm.TOLERANCE)
+    assert np.all(abs(test_rocket.drag_force() - np.array(
+        [0.003414, 0.003414, 0.003414])) <= rm.TOLERANCE)
 
 
 def test_drag_with_negative_int_velocity(mocker):
@@ -277,8 +271,8 @@ def test_drag_with_negative_int_velocity(mocker):
                  return_value=np.array([(-1 / np.sqrt(3)), (-1 / np.sqrt(3)),
                                         (-1 / np.sqrt(3))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.7204)
-    assert np.all((test_rocket.drag_force() - np.array(
-        [-0.0367, -0.0367, -0.0367])) <= rm.TOLERANCE)
+    assert np.all(abs(test_rocket.drag_force() - np.array(
+        [-0.003414, -0.003414, -0.003414])) <= rm.TOLERANCE)
 
 
 def test_drag_with_float_velocity(mocker):
@@ -294,8 +288,8 @@ def test_drag_with_float_velocity(mocker):
                      [(32.5 / np.sqrt(5618.75)), (42.5 / np.sqrt(5618.75)),
                       (52.5 / np.sqrt(5618.75))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.4254)
-    assert np.all((test_rocket.drag_force() - np.array(
-        [30.5226, 39.9142, 49.3058])) <= rm.TOLERANCE)
+    assert np.all(abs(test_rocket.drag_force() - np.array(
+        [2.8356, 3.7082, 4.5807])) <= rm.TOLERANCE)
 
 
 # Testing functions for update_thrust().
@@ -506,8 +500,8 @@ def test_update_acceleration_with_thrust_and_drag_floats(mocker):
                  return_value=np.array([7.5339, 8.2514, 8.9689]))
     mocker.patch('rocket_math.Rocket.gravity',
                  return_value=32.1389)
-    assert np.all(test_rocket.update_acceleration() -
-                  np.array([2.9661, 3.2486, -28.6078])) <= rm.TOLERANCE
+    assert np.all(abs(test_rocket.update_acceleration() -
+                  np.array([2.9661, 3.2486, -28.6078]))) <= rm.TOLERANCE
 
 
 # Testing functions for update_velocity().
