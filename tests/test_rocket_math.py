@@ -255,8 +255,8 @@ def test_drag_with_positive_int_velocity(mocker):
                  return_value=np.array(
                      [(1 / np.sqrt(3)), (1 / np.sqrt(3)), (1 / np.sqrt(3))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.7204)
-    assert np.all(abs(test_rocket.drag_force() - np.array(
-        [0.003414, 0.003414, 0.003414])) <= rm.TOLERANCE)
+    np.testing.assert_allclose(test_rocket.drag_force(), np.array([0.003414, 0.003414, 0.003414]),
+                               atol=rm.TOLERANCE)
 
 
 def test_drag_with_negative_int_velocity(mocker):
@@ -271,8 +271,8 @@ def test_drag_with_negative_int_velocity(mocker):
                  return_value=np.array([(-1 / np.sqrt(3)), (-1 / np.sqrt(3)),
                                         (-1 / np.sqrt(3))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.7204)
-    assert np.all(abs(test_rocket.drag_force() - np.array(
-        [-0.003414, -0.003414, -0.003414])) <= rm.TOLERANCE)
+    np.testing.assert_allclose(test_rocket.drag_force(), np.array(
+        [-0.003414, -0.003414, -0.003414]), atol=rm.TOLERANCE)
 
 
 def test_drag_with_float_velocity(mocker):
@@ -288,8 +288,8 @@ def test_drag_with_float_velocity(mocker):
                      [(32.5 / np.sqrt(5618.75)), (42.5 / np.sqrt(5618.75)),
                       (52.5 / np.sqrt(5618.75))]))
     mocker.patch('rocket_math.Rocket.air_density', return_value=0.4254)
-    assert np.all(abs(test_rocket.drag_force() - np.array(
-        [2.8356, 3.7082, 4.5807])) <= rm.TOLERANCE)
+    np.testing.assert_allclose(test_rocket.drag_force(), np.array([2.8356, 3.7082, 4.5807]),
+                               atol=rm.TOLERANCE)
 
 
 # Testing functions for update_thrust().
@@ -500,8 +500,8 @@ def test_update_acceleration_with_thrust_and_drag_floats(mocker):
                  return_value=np.array([7.5339, 8.2514, 8.9689]))
     mocker.patch('rocket_math.Rocket.gravity',
                  return_value=32.1389)
-    assert np.all(abs(test_rocket.update_acceleration() -
-                  np.array([2.9661, 3.2486, -28.6078]))) <= rm.TOLERANCE
+    np.testing.assert_allclose(test_rocket.update_acceleration(), np.array(
+        [2.9661, 3.2486, -28.6078]), atol=rm.TOLERANCE)
 
 
 # Testing functions for update_velocity().
@@ -803,8 +803,7 @@ def test_update_orientation_eighth_rev_x_axis():
     orientation_after_update = Quaternion(axis=[1, 0, 0],
                                           angle=(np.pi / 4)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_neg_eighth_rev_x_axis():
@@ -817,8 +816,7 @@ def test_update_orientation_neg_eighth_rev_x_axis():
     orientation_after_update = Quaternion(axis=[1, 0, 0],
                                           angle=(-np.pi / 4)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_quarter_rev_x_axis():
@@ -831,8 +829,7 @@ def test_update_orientation_quarter_rev_x_axis():
     orientation_after_update = Quaternion(axis=[1, 0, 0],
                                           angle=(np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_half_rev_x_axis():
@@ -845,8 +842,7 @@ def test_update_orientation_half_rev_x_axis():
     orientation_after_update = Quaternion(axis=[1, 0, 0],
                                           angle=np.pi).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_three_quarter_rev_x_axis():
@@ -859,8 +855,7 @@ def test_update_orientation_three_quarter_rev_x_axis():
     orientation_after_update = Quaternion(axis=[1, 0, 0],
                                           angle=(3 * np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_eighth_rev_y_axis():
@@ -873,8 +868,7 @@ def test_update_orientation_eighth_rev_y_axis():
     orientation_after_update = Quaternion(axis=[0, 1, 0],
                                           angle=(np.pi / 4)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_neg_eighth_rev_y_axis():
@@ -887,8 +881,7 @@ def test_update_orientation_neg_eighth_rev_y_axis():
     orientation_after_update = Quaternion(axis=[0, 1, 0],
                                           angle=(-np.pi / 4)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_quarter_rev_y_axis():
@@ -901,8 +894,7 @@ def test_update_orientation_quarter_rev_y_axis():
     orientation_after_update = Quaternion(axis=[0, 1, 0],
                                           angle=(np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_half_rev_y_axis():
@@ -915,8 +907,7 @@ def test_update_orientation_half_rev_y_axis():
     orientation_after_update = Quaternion(axis=[0, 1, 0],
                                           angle=np.pi).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_three_quarter_rev_y_axis():
@@ -929,8 +920,7 @@ def test_update_orientation_three_quarter_rev_y_axis():
     orientation_after_update = Quaternion(axis=[0, 1, 0],
                                           angle=(3 * np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_eighth_rev_z_axis():
@@ -943,8 +933,7 @@ def test_update_orientation_eighth_rev_z_axis():
     orientation_after_update = Quaternion(axis=[0, 0, 1],
                                           angle=(np.pi / 4)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_neg_eighth_rev_z_axis():
@@ -957,8 +946,7 @@ def test_update_orientation_neg_eighth_rev_z_axis():
     orientation_after_update = Quaternion(axis=[0, 0, 1],
                                           angle=(-np.pi / 4)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_quarter_rev_z_axis():
@@ -971,8 +959,7 @@ def test_update_orientation_quarter_rev_z_axis():
     orientation_after_update = Quaternion(axis=[0, 0, 1],
                                           angle=(np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_half_rev_z_axis():
@@ -985,8 +972,7 @@ def test_update_orientation_half_rev_z_axis():
     orientation_after_update = Quaternion(axis=[0, 0, 1],
                                           angle=np.pi).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_three_quarter_rev_z_axis():
@@ -999,8 +985,7 @@ def test_update_orientation_three_quarter_rev_z_axis():
     orientation_after_update = Quaternion(axis=[0, 0, 1],
                                           angle=(3 * np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_half_rev_all_axes():
@@ -1015,19 +1000,18 @@ def test_update_orientation_half_rev_all_axes():
     orientation_after_update = Quaternion(axis=[1, 1, 1],
                                           angle=(np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 '''
 Note for the next 3 unit tests:
     Angular rates were determined through an online calculator and by using the
     predetermined desired quaternion with the formula:
-    
+
         angular_rates = (quaternion_axis * quaternion_angle) / timestep
-        
+
     Since the initial quaternion is always [1, 0, 0, 0] in this context.
-    
+
     Online calculator used:
     -https://www.andre-gaschler.com/rotationconverter/
 '''
@@ -1044,8 +1028,7 @@ def test_update_orientation_quarter_rev_x_y_axes():
     orientation_after_update = Quaternion(axis=[1, 2, 0],
                                           angle=(np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_quarter_rev_y_z_axes():
@@ -1059,8 +1042,7 @@ def test_update_orientation_quarter_rev_y_z_axes():
     orientation_after_update = Quaternion(axis=[0, 1, 2],
                                           angle=(np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_quarter_rev_x_z_axes():
@@ -1074,8 +1056,7 @@ def test_update_orientation_quarter_rev_x_z_axes():
     orientation_after_update = Quaternion(axis=[2, 0, 1],
                                           angle=(np.pi / 2)).elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 def test_update_orientation_from_non_identity_quat():
@@ -1091,8 +1072,7 @@ def test_update_orientation_from_non_identity_quat():
     angular_rates = np.array([2 * np.pi, 0, 0])
     orientation_after_update = Quaternion().elements
     new_orientation = test_rocket.update_orientation(angular_rates, delta_time)
-    assert np.all(
-        abs(new_orientation - orientation_after_update) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_orientation, orientation_after_update, atol=rm.TOLERANCE)
 
 
 # Testing functions for finding temperature
@@ -1180,8 +1160,8 @@ def test_body_acceleration_positive_integers():
     test_rocket.world_acceleration = np.array([1, 1, 1])
     body_acceleration_after_rotate = np.array([0.2929, 0, 1.707])
     new_body_acceleration = test_rocket.update_body_acceleration()
-    assert np.all(abs(
-        body_acceleration_after_rotate - new_body_acceleration) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_body_acceleration, body_acceleration_after_rotate,
+                               atol=rm.TOLERANCE)
 
 
 def test_body_acceleration_negative_integers():
@@ -1194,8 +1174,8 @@ def test_body_acceleration_negative_integers():
     test_rocket.world_acceleration = np.array([-1, -1, -3])
     body_acceleration_after_rotate = np.array([-1.2929, 1.4142, -2.7071])
     new_body_acceleration = test_rocket.update_body_acceleration()
-    assert np.all(abs(
-        body_acceleration_after_rotate - new_body_acceleration) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_body_acceleration, body_acceleration_after_rotate,
+                               atol=rm.TOLERANCE)
 
 
 def test_body_acceleration_positive_floats():
@@ -1208,8 +1188,8 @@ def test_body_acceleration_positive_floats():
     test_rocket.world_acceleration = np.array([1.5, 2.5, 3.5])
     body_acceleration_after_rotate = np.array([0.7322, -1.4142, 4.2678])
     new_body_acceleration = test_rocket.update_body_acceleration()
-    assert np.all(abs(
-        body_acceleration_after_rotate - new_body_acceleration) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_body_acceleration, body_acceleration_after_rotate,
+                               atol=rm.TOLERANCE)
 
 
 def test_body_acceleration_negative_floats():
@@ -1222,8 +1202,8 @@ def test_body_acceleration_negative_floats():
     test_rocket.world_acceleration = np.array([-1.5, -2, -3])
     body_acceleration_after_rotate = np.array([-0.8358, 1.0606, -3.6642])
     new_body_acceleration = test_rocket.update_body_acceleration()
-    assert np.all(abs(
-        body_acceleration_after_rotate - new_body_acceleration) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_body_acceleration, body_acceleration_after_rotate,
+                               atol=rm.TOLERANCE)
 
 
 def test_body_acceleration_45_degrees():
@@ -1236,8 +1216,8 @@ def test_body_acceleration_45_degrees():
     test_rocket.world_acceleration = np.array([1, 1, 1])
     body_acceleration_after_rotate = np.array([0.5, 0.7071, 1.5])
     new_body_acceleration = test_rocket.update_body_acceleration()
-    assert np.all(abs(
-        body_acceleration_after_rotate - new_body_acceleration) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_body_acceleration, body_acceleration_after_rotate,
+                               atol=rm.TOLERANCE)
 
 
 def test_body_acceleration_180_degrees():
@@ -1249,8 +1229,8 @@ def test_body_acceleration_180_degrees():
     test_rocket.world_acceleration = np.array([1, 1, 1])
     body_acceleration_after_rotate = np.array([1, -1, 1])
     new_body_acceleration = test_rocket.update_body_acceleration()
-    assert np.all(abs(
-        body_acceleration_after_rotate - new_body_acceleration) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_body_acceleration, body_acceleration_after_rotate,
+                               atol=rm.TOLERANCE)
 
 
 # Testing functions for finding the magnetic field around the rocket
@@ -1264,7 +1244,7 @@ def test_magnetic_field_zeros():
     test_rocket.world_mag_field = np.array([0, 0, 0])
     mag_field_after_rotate = np.array([0, 0, 0])
     new_mag_field = test_rocket.update_magnetic_field()
-    assert np.all(abs(mag_field_after_rotate - new_mag_field) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_mag_field, mag_field_after_rotate, atol=rm.TOLERANCE)
 
 
 def test_magnetic_field_positive_integers():
@@ -1277,7 +1257,7 @@ def test_magnetic_field_positive_integers():
     test_rocket.world_mag_field = np.array([1, 1, 1])
     mag_field_after_rotate = np.array([0.2929, 0, 1.707])
     new_mag_field = test_rocket.update_magnetic_field()
-    assert np.all(abs(mag_field_after_rotate - new_mag_field) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_mag_field, mag_field_after_rotate, atol=rm.TOLERANCE)
 
 
 def test_magnetic_field_negative_integers():
@@ -1287,7 +1267,7 @@ def test_magnetic_field_negative_integers():
     test_rocket.world_mag_field = np.array([-1, -1, -3])
     mag_field_after_rotate = np.array([-1.2929, 1.4142, -2.7071])
     new_mag_field = test_rocket.update_magnetic_field()
-    assert np.all(abs(mag_field_after_rotate - new_mag_field) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_mag_field, mag_field_after_rotate, atol=rm.TOLERANCE)
 
 
 def test_magnetic_field_positive_floats():
@@ -1300,7 +1280,7 @@ def test_magnetic_field_positive_floats():
     test_rocket.world_mag_field = np.array([1.5, 2.5, 3.5])
     mag_field_after_rotate = np.array([0.7322, -1.4142, 4.2678])
     new_mag_field = test_rocket.update_magnetic_field()
-    assert np.all(abs(mag_field_after_rotate - new_mag_field) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_mag_field, mag_field_after_rotate, atol=rm.TOLERANCE)
 
 
 def test_magnetic_field_negative_floats():
@@ -1313,7 +1293,7 @@ def test_magnetic_field_negative_floats():
     test_rocket.world_mag_field = np.array([-1.5, -2, -3])
     mag_field_after_rotate = np.array([-0.8358, 1.0606, -3.6642])
     new_mag_field = test_rocket.update_magnetic_field()
-    assert np.all(abs(mag_field_after_rotate - new_mag_field) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_mag_field, mag_field_after_rotate, atol=rm.TOLERANCE)
 
 
 def test_magnetic_field_45_degrees():
@@ -1326,7 +1306,7 @@ def test_magnetic_field_45_degrees():
     test_rocket.world_mag_field = np.array([1, 1, 1])
     mag_field_after_rotate = np.array([0.5, 0.7071, 1.5])
     new_mag_field = test_rocket.update_magnetic_field()
-    assert np.all(abs(mag_field_after_rotate - new_mag_field) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_mag_field, mag_field_after_rotate, atol=rm.TOLERANCE)
 
 
 def test_magnetic_field_180_degrees():
@@ -1338,4 +1318,4 @@ def test_magnetic_field_180_degrees():
     test_rocket.world_mag_field = np.array([1, 1, 1])
     mag_field_after_rotate = np.array([1, -1, 1])
     new_mag_field = test_rocket.update_magnetic_field()
-    assert np.all(abs(mag_field_after_rotate - new_mag_field) <= rm.TOLERANCE)
+    np.testing.assert_allclose(new_mag_field, mag_field_after_rotate, atol=rm.TOLERANCE)
