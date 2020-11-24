@@ -293,133 +293,106 @@ def test_drag_with_float_velocity(mocker):
 
 
 # Testing functions for update_thrust().
-def test_update_thrust_with_no_thrust_or_velocity(mocker):
+def test_update_thrust_with_no_thrust_and_def_orientation():
     """
-    Test update_thrust() for no thrust or velocity (thrust and velocity vectors
-    are zero vectors).
+    Test update_thrust() for no thrust and default orientation (thrust is the zero vector).
     """
     test_rocket = rm.Rocket()
     current_time = 0
-    mocker.patch('rocket_math.Rocket.speed', return_value=0)
-    mocker.patch('rocket_math.Rocket.velocity_uv',
-                 return_value=np.array([0, 0, 0]))
-
-    assert np.all(
-        test_rocket.update_thrust(current_time) == np.array([0, 0, 0]))
+    thrust_after_update = np.array([0, 0, 0])
+    new_thrust = test_rocket.update_thrust(current_time)
+    np.testing.assert_allclose(new_thrust, thrust_after_update, atol=rm.TOLERANCE)
 
 
-def test_update_thrust_with_pos_thrust_and_no_velocity_ints(mocker):
+def test_update_thrust_with_pos_thrust_and_def_orientation():
     """
-    Test update_thrust() for thrust vector with positive integers and no
-    velocity.
-        velocity = [0, 0, 0]
+    Test update_thrust() for thrust vector with positive integers and default orientation:
+        orientation = np.array([1.0, 0.0, 0.0, 0.0]) # identity quaternion
     """
     test_rocket = rm.Rocket()
     test_rocket.burn_time = 10
     test_rocket.thrust = np.array([1, 1, 1])
     current_time = 0
-    mocker.patch('rocket_math.Rocket.speed', return_value=0)
-    mocker.patch('rocket_math.Rocket.velocity_uv',
-                 return_value=np.array([0, 0, 0]))
-    assert np.all(
-        test_rocket.update_thrust(current_time) == np.array([1, 1, 1]))
+    thrust_after_update = np.array([1, 1, 1])
+    new_thrust = test_rocket.update_thrust(current_time)
+    np.testing.assert_allclose(new_thrust, thrust_after_update, atol=rm.TOLERANCE)
 
 
-def test_update_thrust_with_pos_thrust_and_velocity_ints(mocker):
+def test_update_thrust_with_pos_thrust_and_orientation_ints():
     """
-    Test update_thrust() for thrust and velocity vectors with positive
+    Test update_thrust() for thrust vector and orientation quaternion with positive
     integers.
-        velocity = [1, 1, 1]
+        orientation is axis of [1, 1, 1] with angle pi/2
     """
     test_rocket = rm.Rocket()
     test_rocket.burn_time = 10
     test_rocket.thrust = np.array([1, 1, 1])
     current_time = 0
-    mocker.patch('rocket_math.Rocket.speed',
-                 return_value=np.sqrt(3))
-    mocker.patch('rocket_math.Rocket.velocity_uv',
-                 return_value=np.array(
-                     [(1 / np.sqrt(3)), (1 / np.sqrt(3)), (1 / np.sqrt(3))]))
-    assert np.all(
-        test_rocket.update_thrust(current_time) == np.array([1, 1, 1]))
+    test_rocket.orientation = Quaternion(axis=[1, 1, 1], angle=(np.pi / 2)).elements
+    thrust_after_update = np.array([1, 1, 1])
+    new_thrust = test_rocket.update_thrust(current_time)
+    np.testing.assert_allclose(new_thrust, thrust_after_update, atol=rm.TOLERANCE)
 
 
-def test_update_thrust_with_pos_thrust_and_neg_velocity_ints(mocker):
+def test_update_thrust_with_pos_thrust_and_neg_orientation_ints():
     """
-    Test update_thrust() for thrust vector with positive integers and velocity
-    vector with negative integers.
-        velocity = [-1, -1, -1]
+    Test update_thrust() for thrust vector with positive integers and orientation quaternion
+    with negative integers.
+        orientation is axis of [-1, 0, 0] with angle pi/2
+    """
+    test_rocket = rm.Rocket()
+    test_rocket.burn_time = 10
+    test_rocket.thrust = np.array([1, 1, 1])
+    current_time = 0
+    test_rocket.orientation = Quaternion(axis=[-1, 0, 0], angle=(np.pi / 2)).elements
+    thrust_after_update = np.array([1, 1, -1])
+    new_thrust = test_rocket.update_thrust(current_time)
+    np.testing.assert_allclose(new_thrust, thrust_after_update, atol=rm.TOLERANCE)
+
+
+def test_update_thrust_with_neg_thrust_and_pos_orientation_ints():
+    """
+    Test update_thrust() for thrust vector with negative integers and orientation quaternion
+    with positive integers.
+        orientation is axis of [1, 0, 0] with angle pi/2
     """
     test_rocket = rm.Rocket()
     test_rocket.burn_time = 10
     test_rocket.thrust = np.array([-1, -1, -1])
     current_time = 0
-    mocker.patch('rocket_math.Rocket.speed',
-                 return_value=np.sqrt(3))
-    mocker.patch('rocket_math.Rocket.velocity_uv',
-                 return_value=np.array(
-                     [(1 / np.sqrt(3)), (1 / np.sqrt(3)), (1 / np.sqrt(3))]))
-    assert np.all(
-        test_rocket.update_thrust(current_time) == np.array([1, 1, 1]))
+    test_rocket.orientation = Quaternion(axis=[1, 0, 0], angle=(np.pi / 2)).elements
+    thrust_after_update = np.array([-1, 1, -1])
+    new_thrust = test_rocket.update_thrust(current_time)
+    np.testing.assert_allclose(new_thrust, thrust_after_update, atol=rm.TOLERANCE)
 
 
-def test_update_thrust_with_neg_thrust_and_pos_velocity_ints(mocker):
+def test_update_thrust_with_thrust_floats_and_orientation_ints():
     """
-    Test update_thrust() for thrust vector with negative integers and velocity
-    vector with positive integers.
-        velocity = [1, 1, 1]
-    """
-    test_rocket = rm.Rocket()
-    test_rocket.burn_time = 10
-    test_rocket.thrust = np.array([1, 1, 1])
-    current_time = 0
-    mocker.patch('rocket_math.Rocket.speed',
-                 return_value=np.sqrt(3))
-    mocker.patch('rocket_math.Rocket.velocity_uv',
-                 return_value=np.array(
-                     [(-1 / np.sqrt(3)), (-1 / np.sqrt(3)),
-                      (-1 / np.sqrt(3))]))
-    assert np.all(
-        test_rocket.update_thrust(current_time) == np.array([-1, -1, -1]))
-
-
-def test_update_thrust_with_thrust_and_velocity_floats(mocker):
-    """
-    Test update_thrust() for thrust and velocity vectors with floats.
-        velocity = [10.5, 11.5, 12.5]
+    Test update_thrust() for thrust vector with floats and the orientation quaternion with:
+        orientation is axis of [0, 0, 4] with angle pi/2
     """
     test_rocket = rm.Rocket()
     test_rocket.burn_time = 10
     test_rocket.thrust = np.array([10.5, 11.5, 12.5])
     current_time = 5
-    mocker.patch('rocket_math.Rocket.speed',
-                 return_value=np.sqrt(398.75))
-    mocker.patch('rocket_math.Rocket.velocity_uv',
-                 return_value=np.array(
-                     [(10.5 / np.sqrt(398.75)), (11.5 / np.sqrt(398.75)),
-                      (12.5 / np.sqrt(398.75))]))
-    assert np.all(
-        test_rocket.update_thrust(current_time) == np.array(
-            [10.5, 11.5, 12.5]))
+    test_rocket.orientation = Quaternion(axis=[0, 0, 1], angle=(np.pi / 2)).elements
+    thrust_after_update = np.array([-11.5, 10.5, 12.5])
+    new_thrust = test_rocket.update_thrust(current_time)
+    np.testing.assert_allclose(new_thrust, thrust_after_update, atol=rm.TOLERANCE)
 
 
-def test_update_thrust_with_greater_current_time(mocker):
+def test_update_thrust_with_greater_current_time():
     """
     Test update_thrust() for current time greater than burn time.
         thrust = [1, 1, 1]
-        velocity = [1, 1, 1]
+        orienation is axis of [1, 0, 0] with angle pi/2
     """
     test_rocket = rm.Rocket()
     test_rocket.burn_time = 10
     test_rocket.thrust = np.array([1, 1, 1])
     current_time = 20
-    mocker.patch('rocket_math.Rocket.speed',
-                 return_value=np.sqrt(3))
-    mocker.patch('rocket_math.Rocket.velocity_uv',
-                 return_value=np.array(
-                     [(1 / np.sqrt(3)), (1 / np.sqrt(3)), (1 / np.sqrt(3))]))
-    assert np.all(
-        test_rocket.update_thrust(current_time) == np.array([0, 0, 0]))
+    test_rocket.orientation = Quaternion(axis=[1, 0, 0], angle=(np.pi / 2)).elements
+    assert np.all(test_rocket.update_thrust(current_time) == np.array([0, 0, 0]))
 
 
 # Testing functions for update_acceleration().
