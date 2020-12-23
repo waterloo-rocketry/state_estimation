@@ -49,7 +49,6 @@ def init_rocket_state() -> rm.Rocket:
         Rocket object to be used to generate data sets based on user input.
     """
     # Get user input
-
     total_mass = thrust = burn_time = press_noise = temp_noise = \
         accel_noise = gyro_noise = mag_noise = 0
     valid_user_input = False
