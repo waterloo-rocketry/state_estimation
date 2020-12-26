@@ -19,6 +19,8 @@ if not os.path.isdir(GEN_FILES_PATH):
     os.mkdir(GEN_FILES_PATH)
 GT_PATH = os.path.join(GEN_FILES_PATH, "ground_truth.txt")
 SD_PATH = os.path.join(GEN_FILES_PATH, "sensor_data.txt")
+
+
 # -----------------------------------------------------------
 
 
@@ -54,10 +56,10 @@ def init_rocket_state() -> rm.Rocket:
     valid_user_input = False
     while not valid_user_input:
         total_mass, thrust, burn_time, press_noise, temp_noise, accel_noise, \
-            gyro_noise, mag_noise = input(
-                "Enter a total mass, thrust, burn time, and noise params "
-                "(pressure, temperature, acceleration, gyro, and magnetic "
-                "noise). Please separate each value with a space: ").split()
+        gyro_noise, mag_noise = input(
+            "Enter a total mass, thrust, burn time, and noise params "
+            "(pressure, temperature, acceleration, gyro, and magnetic "
+            "noise). Please separate each value with a space: ").split()
 
         total_mass = float(total_mass)
         thrust = np.fromstring(thrust, dtype=float, sep=",")
@@ -129,23 +131,22 @@ def main():
     headings_gt = ["Position [m]", "Velocity [m/s]", "Acceleration [m/s^2]", "Orientation"]
     headings_sd = ["Baro_Pressure [KPa]", "Temperature [Celsius]", "Acceleration [m/s^2]", "Magnetic_Field [T]"]
 
-    with open(GT_PATH, "w") as ground_truth:
-        with open(SD_PATH, "w") as sensor_data:
-            # Get the initial rocket state
-            current_rocket = init_rocket_state()
+    with open(GT_PATH, "w") as ground_truth, open(SD_PATH, "w") as sensor_data:
+        # Get the initial rocket state
+        current_rocket = init_rocket_state()
 
-            # Update state and write data to file
-            while time_dict["current_time"] < time_dict["end_time"]:
-                # Update rocket params with current timestep
-                time_update(current_rocket, time_dict)
-                gt_gen_data.append([current_rocket.position, current_rocket.velocity, current_rocket.world_acceleration,
-                                    current_rocket.orientation])
-                sensor_gen_data.append([current_rocket.baro_pressure, current_rocket.temperature,
-                                        current_rocket.body_acceleration, current_rocket.body_mag_field])
-                time_dict["current_time"] += time_dict["timestep"]
-            # Write generated data to ground truth and sensor data files
-            ground_truth.write(tabulate(gt_gen_data, headers=headings_gt, tablefmt="rst"))
-            sensor_data.write(tabulate(sensor_gen_data, headers=headings_sd, tablefmt="rst"))
+        # Update state and write data to file
+        while time_dict["current_time"] < time_dict["end_time"]:
+            # Update rocket params with current timestep
+            time_update(current_rocket, time_dict)
+            gt_gen_data.append([current_rocket.position, current_rocket.velocity, current_rocket.world_acceleration,
+                                current_rocket.orientation])
+            sensor_gen_data.append([current_rocket.baro_pressure, current_rocket.temperature,
+                                    current_rocket.body_acceleration, current_rocket.body_mag_field])
+            time_dict["current_time"] += time_dict["timestep"]
+        # Write generated data to ground truth and sensor data files
+        ground_truth.write(tabulate(gt_gen_data, headers=headings_gt, tablefmt="rst"))
+        sensor_data.write(tabulate(sensor_gen_data, headers=headings_sd, tablefmt="rst"))
 
 
 if __name__ == "__main__":
