@@ -80,7 +80,7 @@ def init_rocket_state() -> rm.Rocket:
                                          "mag_noise": float(mag_noise)})
 
 
-def time_update(rocket, time_dict):
+def time_update(rocket, current_time, timestep):
     """
     Updates the state of the Rocket for every timestep.
 
@@ -88,17 +88,19 @@ def time_update(rocket, time_dict):
     ----------
     rocket: Rocket
         Rocket object to update.
-    time_dict: dict of {str : float}
-        Stores the time attributes in the data generation process.
+    current_time: float
+        Current time during the data generation process
+    timestep: float
+        The length of time current_time is increased by for a step forward in "simulated" time.
     """
     # Calculate updated state from previous timestep's state
-    updated_position = rocket.update_position(time_dict["timestep"])
-    updated_velocity = rocket.update_velocity(time_dict["timestep"])
+    updated_position = rocket.update_position(timestep)
+    updated_velocity = rocket.update_velocity(timestep)
     updated_acceleration = rocket.update_acceleration()
-    updated_thrust = rocket.update_thrust(time_dict["current_time"])
-    updated_mass = rocket.update_mass(time_dict["timestep"])
+    updated_thrust = rocket.update_thrust(current_time)
+    updated_mass = rocket.update_mass(timestep)
     updated_orientation = rocket.update_orientation(rm.ANGULAR_RATES,
-                                                    time_dict["timestep"])
+                                                    timestep)
     updated_temperature = rocket.update_temperature()
     updated_baro_pressure = rocket.update_baro_pressure()
     updated_body_acceleration = rocket.update_body_acceleration()
@@ -122,8 +124,10 @@ def main():
     """
     Main function for generating data based on the input Rocket.
     """
-    # Timestep setup
-    time_dict = {"current_time": 0, "end_time": 100, "timestep": 0.01}
+    # Simulated time setup
+    current_time = 0
+    end_time = 100
+    timestep = 0.01
 
     # Data lists and headings initializations
     gt_gen_data = []
@@ -136,17 +140,17 @@ def main():
         current_rocket = init_rocket_state()
 
         # Update state and write data to file
-        while time_dict["current_time"] < time_dict["end_time"]:
+        while current_time < end_time:
             # Update rocket params with current timestep
-            time_update(current_rocket, time_dict)
+            time_update(current_rocket, current_time, timestep)
             gt_gen_data.append([current_rocket.position, current_rocket.velocity, current_rocket.world_acceleration,
                                 current_rocket.orientation])
             sensor_gen_data.append([current_rocket.baro_pressure, current_rocket.temperature,
                                     current_rocket.body_acceleration, current_rocket.body_mag_field])
-            time_dict["current_time"] += time_dict["timestep"]
+            current_time += timestep
         # Write generated data to ground truth and sensor data files
         ground_truth.write(tabulate(gt_gen_data, headers=headings_gt, tablefmt="rst"))
-        sensor_data.write(tabulate(sensor_gen_data, headers=headings_sd, tablefmt="rst"))
+        sensor_data.write(tabulate(sensor_gen_data, headers=headings_sd, tablefmt="rst", numalign="left"))
 
 
 if __name__ == "__main__":
