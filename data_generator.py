@@ -19,8 +19,13 @@ if not os.path.isdir(GEN_FILES_PATH):
     os.mkdir(GEN_FILES_PATH)
 GT_PATH = os.path.join(GEN_FILES_PATH, "ground_truth.txt")
 SD_PATH = os.path.join(GEN_FILES_PATH, "sensor_data.txt")
+# -----------------------------------------------------------
 
-
+# --------------------NUMPY PRINT OPTIONS--------------------
+# Variable Precision:
+np.set_printoptions(precision=4)
+# Disable Scientific Notation:
+np.set_printoptions(suppress=True)
 # -----------------------------------------------------------
 
 
@@ -150,7 +155,7 @@ def main():
             current_time += timestep
         # Write generated data to ground truth and sensor data files
         ground_truth.write(tabulate(gt_gen_data, headers=headings_gt, tablefmt="rst"))
-        sensor_data.write(tabulate(sensor_gen_data, headers=headings_sd, tablefmt="rst", numalign="left"))
+        sensor_data.write(tabulate(sensor_gen_data, headers=headings_sd, tablefmt="rst", numalign="left", floatfmt=".4f"))
 
 
 if __name__ == "__main__":
