@@ -9,6 +9,7 @@ import numpy as np
 from tabulate import tabulate
 
 import rocket_math as rm
+import sensors
 
 # -----------------------CONSTANTS---------------------------
 # File Paths:
@@ -104,12 +105,12 @@ def time_update(rocket, current_time, timestep):
     updated_acceleration = rocket.update_acceleration()
     updated_thrust = rocket.update_thrust(current_time)
     updated_mass = rocket.update_mass(timestep)
-    updated_orientation = rocket.update_orientation(rm.ANGULAR_RATES,
-                                                    timestep)
-    updated_temperature = rocket.update_temperature()
-    updated_baro_pressure = rocket.update_baro_pressure()
-    updated_body_acceleration = rocket.update_body_acceleration()
-    updated_mag_field = rocket.update_magnetic_field()
+
+    updated_orientation = rocket.gyro.update(rocket, rm.ANGULAR_RATES, timestep)
+    updated_temperature = rocket.thermistor.update(rocket)
+    updated_baro_pressure = rocket.baro_pressure_sensor.update(rocket)
+    updated_body_acceleration = rocket.accelerometer.update(rocket)
+    updated_mag_field = rocket.magnetometer.update(rocket)
 
     # Update the Rocket object
     rocket.position = updated_position
@@ -143,7 +144,11 @@ def main():
     with open(GT_PATH, "w") as ground_truth, open(SD_PATH, "w") as sensor_data:
         # Get the initial rocket state
         current_rocket = init_rocket_state()
-
+        current_rocket.accelerometer = sensors.Accelerometer()
+        current_rocket.baro_pressure_sensor = sensors.Baro_Pressure_Sensor()
+        current_rocket.gyro = sensors.Gyro()
+        current_rocket.magnetometer = sensors.Magnetometer()
+        current_rocket.thermistor = sensors.Thermistor()
         # Update state and write data to file
         while current_time < end_time:
             # Update rocket params with current timestep
