@@ -234,11 +234,8 @@ def test_update_orientation_half_rev_all_axes():
 Note for the next 3 unit tests:
     Angular rates were determined through an online calculator and by using the
     predetermined desired quaternion with the formula:
-
         angular_rates = (quaternion_axis * quaternion_angle) / timestep
-
     Since the initial quaternion is always [1, 0, 0, 0] in this context.
-
     Online calculator used:
     -https://www.andre-gaschler.com/rotationconverter/
 '''
@@ -292,7 +289,6 @@ def test_update_orientation_quarter_rev_x_z_axes():
 def test_update_orientation_from_non_identity_quat():
     """
     Test update_orientation() rotating from non-identity quaternion.
-
     Note: rotation is 1/4 revolution about x axis.
     """
     test_rocket = rm.Rocket()
