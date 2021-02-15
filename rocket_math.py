@@ -3,7 +3,11 @@ This file defines the Rocket class and the general math functions needed to
 calculate parameters for data generation.
 """
 
+from datetime import date
+
 import numpy as np
+import geomag as gm
+import pymap3d as pm
 from pyquaternion import Quaternion
 
 # -----------------------CONSTANTS---------------------------
@@ -44,7 +48,12 @@ ANGULAR_RATES = np.array([X_ANGULAR_RATE, Y_ANGULAR_RATE, Z_ANGULAR_RATE])
 # Launch site parameters
 TOWER_ANGLE = 90
 LAUNCH_SITE_ALTITUDE = 0
+LAUNCH_SITE_LATITUDE = 32.99078
+LAUNCH_SITE_LONGITUDE = -106.97514
 LOCAL_MAGNETIC_FIELD = 0  # TODO: figure out what we need to actually store
+
+# Initialize coefficient file for magnetic field model (currently valid from 2020-2025)
+MAG_COEFFS = gm.geomag.GeoMag("WMM/WMM.COF")
 
 # Tolerance for equality checks
 TOLERANCE = 0.001
@@ -81,6 +90,15 @@ class Rocket:
     -----
     orientation is in the format of [w, x, y, z], where [w] is the scalar part
     of the quaternion and [x, y, z] are the vector parts.
+
+    world_mag_field and body_mag_field are in the format of [D, I, H, X, Y, Z, F], where:
+        D = Geomagnetic declination [deg]
+        I = Geomagnetic inclination [deg]
+        H = Horizontal geomagnetic field intensity [nT]
+        X = North component of geomagnetic field intensity [nT]
+        Y = East component of geomagnetic field intensity [nT]
+        Z = Vertical component of geomagnetic field intensity [nT]
+        F = Total geomagnetic field intensity [nT]
     """
 
     def __init__(self, mass=None, thrust=np.array([0, 0, 0]), burn_time=0,
@@ -134,9 +152,9 @@ class Rocket:
         self.temperature = 0  # [Celsius]
         self.altitude = 0  # [m]
         self.body_mag_field = np.array(
-            [0.0, 0.0, 0.0])  # Waiting on model choice
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # See class docstring
         self.world_mag_field = np.array(
-            [0.0, 0.0, 0.0])  # Waiting on model choice
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # See class docstring
 
     def __repr__(self):
         """
@@ -421,7 +439,24 @@ class Rocket:
         orientation_quaternion.integrate(angular_rates, delta_time)
         return orientation_quaternion.elements
 
-    def update_baro_pressure(self):
+    def update_world_magnetic_field(self, current_date=date.today()) -> np.array([]):
+        """
+        Calculates the seven magnetic components of the Rocket object based on
+        launch site latitude/longitude, current date, and current altitude.
+
+        Returns
+        -------
+        numpy.array
+            Numpy array (containing data with float type) representing the
+            seven magnetic components of the Rocket object.
+        """
+        mag_components = MAG_COEFFS.GeoMag(LAUNCH_SITE_LATITUDE, LAUNCH_SITE_LONGITUDE,
+                                           self.altitude, current_date)
+        return np.array([mag_components.dec, mag_components.dip, mag_components.bh,
+                         mag_components.bx, mag_components.by, mag_components.bz,
+                         mag_components.ti])
+
+    def update_baro_pressure(self) -> float:
         """
         Calculates the barometric pressure of the atmosphere around the Rocket.
         Uses NASA formulas:
@@ -441,7 +476,7 @@ class Rocket:
 
         return baro_pressure
 
-    def update_temperature(self):
+    def update_temperature(self) -> float:
         """
         Calculates the temperature around the rocket, in celsius.
         Uses NASA formulas:
@@ -460,7 +495,7 @@ class Rocket:
 
         return temperature
 
-    def update_body_acceleration(self):
+    def update_body_acceleration(self) -> np.array([]):
         """
         Calculates the body (proper) acceleration of the rocket,
         which is what the accelerometer measures.
@@ -475,17 +510,18 @@ class Rocket:
         body_acceleration = quaternion.rotate(self.world_acceleration)
         return body_acceleration
 
-    def update_magnetic_field(self):
+    def update_body_magnetic_field(self) -> np.array([]):
         """
-        Calculates the magnetic field around the rocket (Tesla)
+        Calculates the magnetic field components around the rocket.
 
         Returns
         -------
         body_magnetic_field
-            Numpy array representing the magnetic field around
-            the rocket
+            Numpy array representing the magnetic field components around
+            the rocket.
         """
         quaternion = Quaternion(self.orientation)
+        # ecef_mag_field = pm.enu2ecef()
         body_magnetic_field = quaternion.rotate(self.world_mag_field)
         return body_magnetic_field
 
