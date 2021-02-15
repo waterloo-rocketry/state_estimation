@@ -105,12 +105,13 @@ def time_update(rocket, current_time, timestep):
     updated_acceleration = rocket.update_acceleration()
     updated_thrust = rocket.update_thrust(current_time)
     updated_mass = rocket.update_mass(timestep)
+    updated_world_mag_field = rocket.update_world_magnetic_field()
 
     updated_orientation = rocket.gyro.update(rocket, rm.ANGULAR_RATES, timestep)
     updated_temperature = rocket.thermistor.update(rocket)
     updated_baro_pressure = rocket.baro_pressure_sensor.update(rocket)
     updated_body_acceleration = rocket.accelerometer.update(rocket)
-    updated_mag_field = rocket.magnetometer.update(rocket)
+    updated_body_mag_field = rocket.magnetometer.update(rocket)
 
     # Update the Rocket object
     rocket.position = updated_position
@@ -119,10 +120,11 @@ def time_update(rocket, current_time, timestep):
     rocket.thrust = updated_thrust
     rocket.mass = updated_mass
     rocket.orientation = updated_orientation
+    rocket.world_mag_field = updated_world_mag_field
     rocket.altitude = rocket.position[2]
     rocket.temperature = updated_temperature
     rocket.baro_pressure = updated_baro_pressure
-    rocket.body_mag_field = updated_mag_field
+    rocket.body_mag_field = updated_body_mag_field
     rocket.body_acceleration = updated_body_acceleration
 
 
