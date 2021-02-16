@@ -7,7 +7,17 @@ import numpy as np
 from pyquaternion import Quaternion
 
 class Sensor:
-    # All sensors have some calibration parameter
+    """
+    A class used to represent a Sensor object.
+
+    ...
+
+    Attributes
+    ----------
+
+    calibration: float
+    """
+
     def __init__(self, calibration = 1):
         self.calibration = calibration
 
@@ -15,6 +25,11 @@ class Accelerometer(Sensor):
     def update(self, rocket):
         """
         Calculates the body (proper) acceleration of the rocket
+
+        Parameters
+        ----------
+        rocket: A rocket object
+            An rocket instance. Calculations will be done according to this rocket's state
 
         Returns
         -------
@@ -33,6 +48,11 @@ class Baro_Pressure_Sensor(Sensor):
         Calculates the barometric pressure of the atmosphere around the Rocket.
         Uses NASA formulas:
         https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
+
+        Parameters
+        ----------
+        rocket: A rocket object
+            An rocket instance. Calculations will be done according to this rocket's state
 
         Returns
         ---------
@@ -56,6 +76,8 @@ class Gyro(Sensor):
 
         Parameters
         ----------
+        rocket: A rocket object
+            An rocket instance. Calculations will be done according to this rocket's state
         delta_time: float
             The change in time since the last update of the Rocket flight in
             seconds.
@@ -77,6 +99,11 @@ class Magnetometer(Sensor):
         """
         Calculates the magnetic field around the rocket (Tesla)
 
+        Parameters
+        ----------
+        rocket: A rocket object
+            An rocket instance. Calculations will be done according to this rocket's state
+
         Returns
         -------
         body_magnetic_field
@@ -93,6 +120,11 @@ class Thermistor(Sensor):
         Calculates the temperature around the rocket, in celsius.
         Uses NASA formulas:
         https://www.grc.nasa.gov/WWW/K-12/rocket/atmosmet.html
+
+        Parameters
+        ----------
+        rocket: A rocket object
+            An rocket instance. Calculations will be done according to this rocket's state
 
         Returns
         -------
