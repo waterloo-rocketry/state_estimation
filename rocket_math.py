@@ -423,7 +423,7 @@ class Rocket:
         -------
         numpy.array
             Numpy array (containing data with float type) representing the
-            seven magnetic components of the Rocket object.
+            seven magnetic components of the Rocket object (Note: in NED coordinate frame).
         """
         mag_components = MAG_COEFFS.GeoMag(LAUNCH_SITE_LATITUDE, LAUNCH_SITE_LONGITUDE,
                                            self.altitude, current_date)

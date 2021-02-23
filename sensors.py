@@ -41,6 +41,7 @@ class Accelerometer(Sensor):
         """
 
         quaternion = Quaternion(rocket.orientation)
+        # world_mag_field is in NED so it needs to be converted to ENU first (x=y, y=x, z=-z)
         body_acceleration = quaternion.rotate(rocket.world_acceleration * self.calibration)
         return body_acceleration
 
@@ -114,10 +115,11 @@ class Magnetometer(Sensor):
         -------
         body_magnetic_field
             Numpy array representing the magnetic field around
-            the rocket
+            the rocket (Note: in ENU coordinate frame).
         """
         quaternion = Quaternion(rocket.orientation)
-        body_magnetic_field = quaternion.rotate(rocket.world_mag_field * self.calibration)
+        body_magnetic_field = quaternion.rotate(np.array([rocket.world_mag_field[4], rocket.world_mag_field[3],
+                                                          -rocket.world_mag_field[5]]) * self.calibration)
         return body_magnetic_field
 
 
