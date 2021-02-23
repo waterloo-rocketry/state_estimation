@@ -7,7 +7,6 @@ from datetime import date
 
 import numpy as np
 import geomag as gm
-import pymap3d as pm
 from pyquaternion import Quaternion
 
 # -----------------------CONSTANTS---------------------------
@@ -48,8 +47,8 @@ ANGULAR_RATES = np.array([X_ANGULAR_RATE, Y_ANGULAR_RATE, Z_ANGULAR_RATE])
 # Launch site parameters
 TOWER_ANGLE = 90    # TODO: implement proper launch angle
 LAUNCH_SITE_ALTITUDE = 0
-LAUNCH_SITE_LATITUDE = 32.99078
-LAUNCH_SITE_LONGITUDE = -106.97514
+LAUNCH_SITE_LATITUDE = 32.99078 # Latitude at SAC
+LAUNCH_SITE_LONGITUDE = -106.97514  # Longitude at SAC
 LOCAL_MAGNETIC_FIELD = 0  # TODO: figure out what we need to actually store
 
 # Initialize coefficient file for magnetic field model (currently valid from 2020-2025)
@@ -91,7 +90,7 @@ class Rocket:
     orientation is in the format of [w, x, y, z], where [w] is the scalar part
     of the quaternion and [x, y, z] are the vector parts.
 
-    world_mag_field and body_mag_field are in the format of [D, I, H, X, Y, Z, F], where:
+    world_mag_field is in the format of [D, I, H, X, Y, Z, F], where:
         D = Geomagnetic declination [deg]
         I = Geomagnetic inclination [deg]
         H = Horizontal geomagnetic field intensity [nT]
@@ -99,6 +98,8 @@ class Rocket:
         Y = East component of geomagnetic field intensity [nT]
         Z = Vertical component of geomagnetic field intensity [nT]
         F = Total geomagnetic field intensity [nT]
+
+    However, body_mag_field only includes the X,Y,Z components.
     """
 
     def __init__(self, mass=None, thrust=np.array([0, 0, 0]), burn_time=0,
@@ -152,7 +153,7 @@ class Rocket:
         self.temperature = 0  # [Celsius]
         self.altitude = 0  # [m]
         self.body_mag_field = np.array(
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # See class docstring
+            [0.0, 0.0, 0.0])  # See class docstring
         self.world_mag_field = np.array(
             [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # See class docstring
 
