@@ -29,6 +29,16 @@ np.set_printoptions(precision=4)
 np.set_printoptions(suppress=True)
 # -----------------------------------------------------------
 
+# -------------------SENSORS LIST INDEXES--------------------
+GYRO_SENSOR_IND = 0
+THERMISTOR_SENSOR_IND = 1
+BARO_PRESSURE_SENSOR_IND = 2
+ACCELEROMETER_SENSOR_IND = 3
+MAGNETOMETER_SENSOR_IND = 4
+
+
+# -----------------------------------------------------------
+
 
 def is_any_negative(array):
     """
@@ -86,14 +96,36 @@ def init_rocket_state() -> rm.Rocket:
                                          "mag_noise": float(mag_noise)})
 
 
-def time_update(rocket, current_time, timestep):
+def init_sensors() -> list:
+    """
+    Initializes the sensor objects.
+
+    Returns
+    -------
+    sensors: numpy.array
+        The sensors available to be used with the main Rocket Object.
+    """
+    gyro = sensors.Gyro(calibration=1)  # TODO: set calibration constants
+    thermistor = sensors.Thermistor(calibration=1)
+    baro_pressure_sensor = sensors.Baro_Pressure_Sensor(calibration=1)
+    accelerometer = sensors.Accelerometer(calibration=1)
+    magnetometer = sensors.Magnetometer(calibration=1)
+
+    return list(
+        [gyro, thermistor, baro_pressure_sensor, accelerometer, magnetometer])
+
+
+def time_update(rocket, sensors_list: list, current_time, timestep):
     """
     Updates the state of the Rocket for every timestep.
 
     Parameters
     ----------
+
     rocket: Rocket
         Rocket object to update.
+    sensors_list: list
+        Array of sensors used with Rocket Object to update.
     current_time: float
         Current time during the data generation process
     timestep: float
@@ -107,11 +139,16 @@ def time_update(rocket, current_time, timestep):
     updated_mass = rocket.update_mass(timestep)
     updated_world_mag_field = rocket.update_world_magnetic_field()
 
-    updated_orientation = rocket.gyro.update(rocket, rm.ANGULAR_RATES, timestep)
-    updated_temperature = rocket.thermistor.update(rocket)
-    updated_baro_pressure = rocket.baro_pressure_sensor.update(rocket)
-    updated_body_acceleration = rocket.accelerometer.update(rocket)
-    updated_body_mag_field = rocket.magnetometer.update(rocket)
+    updated_orientation = sensors_list[GYRO_SENSOR_IND].update(rocket,
+                                                               rm.ANGULAR_RATES,
+                                                               timestep)
+    updated_temperature = sensors_list[THERMISTOR_SENSOR_IND].update(rocket)
+    updated_baro_pressure = sensors_list[BARO_PRESSURE_SENSOR_IND].update(
+        rocket)
+    updated_body_acceleration = sensors_list[ACCELEROMETER_SENSOR_IND].update(
+        rocket)
+    updated_body_mag_field = sensors_list[MAGNETOMETER_SENSOR_IND].update(
+        rocket)
 
     # Update the Rocket object
     rocket.position = updated_position
@@ -119,13 +156,14 @@ def time_update(rocket, current_time, timestep):
     rocket.world_acceleration = updated_acceleration
     rocket.thrust = updated_thrust
     rocket.mass = updated_mass
-    rocket.orientation = updated_orientation
     rocket.world_mag_field = updated_world_mag_field
     rocket.altitude = rocket.position[2]
+
+    rocket.orientation = updated_orientation
     rocket.temperature = updated_temperature
     rocket.baro_pressure = updated_baro_pressure
-    rocket.body_mag_field = updated_body_mag_field
     rocket.body_acceleration = updated_body_acceleration
+    rocket.body_mag_field = updated_body_mag_field
 
 
 def main():
@@ -140,29 +178,38 @@ def main():
     # Data lists and headings initializations
     gt_gen_data = []
     sensor_gen_data = []
-    headings_gt = ["Position [m]", "Velocity [m/s]", "Acceleration [m/s^2]", "Orientation"]
-    headings_sd = ["Baro_Pressure [KPa]", "Temperature [Celsius]", "Acceleration [m/s^2]", "Magnetic_Field [T]"]
+    headings_gt = ["Position [m]", "Velocity [m/s]", "Acceleration [m/s^2]",
+                   "Orientation"]
+    headings_sd = ["Baro_Pressure [KPa]", "Temperature [Celsius]",
+                   "Acceleration [m/s^2]", "Magnetic_Field [T]"]
 
     with open(GT_PATH, "w") as ground_truth, open(SD_PATH, "w") as sensor_data:
         # Get the initial rocket state
         current_rocket = init_rocket_state()
-        current_rocket.accelerometer = sensors.Accelerometer()
-        current_rocket.baro_pressure_sensor = sensors.Baro_Pressure_Sensor()
-        current_rocket.gyro = sensors.Gyro()
-        current_rocket.magnetometer = sensors.Magnetometer()
-        current_rocket.thermistor = sensors.Thermistor()
+
+        # Init sensors
+        sensors_list = init_sensors()  # type: list
+
         # Update state and write data to file
         while current_time < end_time:
             # Update rocket params with current timestep
-            time_update(current_rocket, current_time, timestep)
-            gt_gen_data.append([current_rocket.position, current_rocket.velocity, current_rocket.world_acceleration,
-                                current_rocket.orientation])
-            sensor_gen_data.append([current_rocket.baro_pressure, current_rocket.temperature,
-                                    current_rocket.body_acceleration, current_rocket.body_mag_field])
+            time_update(current_rocket, sensors_list, current_time, timestep)
+            gt_gen_data.append(
+                [current_rocket.position, current_rocket.velocity,
+                 current_rocket.world_acceleration,
+                 current_rocket.orientation])
+            sensor_gen_data.append(
+                [current_rocket.baro_pressure,
+                 current_rocket.temperature,
+                 current_rocket.body_acceleration,
+                 current_rocket.body_mag_field])
             current_time += timestep
         # Write generated data to ground truth and sensor data files
-        ground_truth.write(tabulate(gt_gen_data, headers=headings_gt, tablefmt="rst"))
-        sensor_data.write(tabulate(sensor_gen_data, headers=headings_sd, tablefmt="rst", numalign="left", floatfmt=".4f"))
+        ground_truth.write(
+            tabulate(gt_gen_data, headers=headings_gt, tablefmt="rst"))
+        sensor_data.write(
+            tabulate(sensor_gen_data, headers=headings_sd, tablefmt="rst",
+                     numalign="left", floatfmt=".4f"))
 
 
 if __name__ == "__main__":
