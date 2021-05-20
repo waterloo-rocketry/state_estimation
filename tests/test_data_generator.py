@@ -12,13 +12,6 @@ Notes:
 '''
 
 
-# Helper Function for testing sensors in update functions
-def get_sensor_list():
-    return list(
-        [sensors.Gyro(), sensors.Thermistor(), sensors.Baro_Pressure_Sensor(),
-         sensors.Accelerometer(), sensors.Magnetometer()])
-
-
 # Testing functions for is_negative_values().
 def test_no_negative_values():
     assert not data_gen.is_any_negative(np.array([0, 1, 2]))
@@ -200,7 +193,7 @@ def test_initial_time_update(mocker):
                  return_value=np.array([1, 1, 1]))
     mocker.patch('sensors.Magnetometer.update',
                  return_value=np.array([0.5, 0.5, 0.5]))
-    data_gen.time_update(test_rocket, get_sensor_list(), time_dict["current_time"], timestep)
+    data_gen.time_update(test_rocket, data_gen.init_sensors(), time_dict["current_time"], timestep)
     assert test_rocket == test_rocket_after_update
 
 
@@ -259,5 +252,5 @@ def test_secondary_time_update(mocker):
                  return_value=np.array([3, 3, 3]))
     mocker.patch('sensors.Magnetometer.update',
                  return_value=np.array([1, 1, 1]))
-    data_gen.time_update(test_rocket, get_sensor_list(), time_dict["current_time"], timestep)
+    data_gen.time_update(test_rocket, data_gen.init_sensors(), time_dict["current_time"], timestep)
     assert test_rocket == test_rocket_after_update

@@ -36,7 +36,6 @@ BARO_PRESSURE_SENSOR_IND = 2
 ACCELEROMETER_SENSOR_IND = 3
 MAGNETOMETER_SENSOR_IND = 4
 
-
 # -----------------------------------------------------------
 
 
@@ -105,17 +104,17 @@ def init_sensors() -> list:
     sensors: numpy.array
         The sensors available to be used with the main Rocket Object.
     """
-    gyro = sensors.Gyro(calibration=1)  # TODO: set calibration constants
-    thermistor = sensors.Thermistor(calibration=1)
-    baro_pressure_sensor = sensors.Baro_Pressure_Sensor(calibration=1)
-    accelerometer = sensors.Accelerometer(calibration=1)
-    magnetometer = sensors.Magnetometer(calibration=1)
+    sens_list = []
+    sens_list.insert(GYRO_SENSOR_IND, sensors.Gyro(calibration=1))
+    sens_list.insert(THERMISTOR_SENSOR_IND, sensors.Thermistor(calibration=1))
+    sens_list.insert(BARO_PRESSURE_SENSOR_IND, sensors.Baro_Pressure_Sensor(calibration=1))
+    sens_list.insert(ACCELEROMETER_SENSOR_IND, sensors.Accelerometer(calibration=1))
+    sens_list.insert(MAGNETOMETER_SENSOR_IND, sensors.Magnetometer(calibration=1))
 
-    return list(
-        [gyro, thermistor, baro_pressure_sensor, accelerometer, magnetometer])
+    return sens_list
 
 
-def time_update(rocket, sensors_list: list, current_time, timestep):
+def time_update(rocket, sensors_list, current_time, timestep):
     """
     Updates the state of the Rocket for every timestep.
 
@@ -188,7 +187,7 @@ def main():
         current_rocket = init_rocket_state()
 
         # Init sensors
-        sensors_list = init_sensors()  # type: list
+        sensors_list = init_sensors()
 
         # Update state and write data to file
         while current_time < end_time:
