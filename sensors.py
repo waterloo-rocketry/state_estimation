@@ -6,6 +6,7 @@ update function that takes a rocket as a parameter, which it performs updates on
 import numpy as np
 from pyquaternion import Quaternion
 
+
 class Sensor:
     """
     A class used to represent a Sensor object.
@@ -18,8 +19,9 @@ class Sensor:
     calibration: float
     """
 
-    def __init__(self, calibration = 1):
+    def __init__(self, calibration=1):
         self.calibration = calibration
+
 
 class Accelerometer(Sensor):
     def update(self, rocket):
@@ -39,8 +41,10 @@ class Accelerometer(Sensor):
         """
 
         quaternion = Quaternion(rocket.orientation)
-        body_acceleration = quaternion.rotate(rocket.world_acceleration * self.calibration)
+        body_acceleration = quaternion.rotate(
+            rocket.world_acceleration * self.calibration)
         return body_acceleration
+
 
 class Baro_Pressure_Sensor(Sensor):
     def update(self, rocket):
@@ -68,6 +72,7 @@ class Baro_Pressure_Sensor(Sensor):
 
         return baro_pressure * self.calibration
 
+
 class Gyro(Sensor):
     def update(self, rocket, angular_rates, delta_time) -> np.array([]):
         """
@@ -91,8 +96,10 @@ class Gyro(Sensor):
             orientation of the Rocket object.
         """
         orientation_quaternion = Quaternion(rocket.orientation)
-        orientation_quaternion.integrate(angular_rates * self.calibration, delta_time)
+        orientation_quaternion.integrate(angular_rates * self.calibration,
+                                         delta_time)
         return orientation_quaternion.elements
+
 
 class Magnetometer(Sensor):
     def update(self, rocket):
@@ -111,8 +118,10 @@ class Magnetometer(Sensor):
             the rocket
         """
         quaternion = Quaternion(rocket.orientation)
-        body_magnetic_field = quaternion.rotate(rocket.world_mag_field * self.calibration)
+        body_magnetic_field = quaternion.rotate(
+            rocket.world_mag_field * self.calibration)
         return body_magnetic_field
+
 
 class Thermistor(Sensor):
     def update(self, rocket):

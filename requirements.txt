@@ -16,3 +16,6 @@ tabulate~=0.8.7
 toml==0.10.1
 wcwidth==0.2.5
 zipp==3.3.0
+filterpy~=1.4.5
+geomag~=0.9.2015
+sympy~=1.8

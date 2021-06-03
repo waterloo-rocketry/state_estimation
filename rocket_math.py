@@ -1,6 +1,6 @@
 """
 This file defines the Rocket class and the general math functions needed to
-calculate parameters for data generation.
+calculate parameters for data generation and filtering.
 """
 
 import numpy as np

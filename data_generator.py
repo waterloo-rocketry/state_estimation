@@ -22,12 +22,10 @@ GT_PATH = os.path.join(GEN_FILES_PATH, "ground_truth.txt")
 SD_PATH = os.path.join(GEN_FILES_PATH, "sensor_data.txt")
 # -----------------------------------------------------------
 
-# --------------------NUMPY PRINT OPTIONS--------------------
-# Variable Precision:
-np.set_printoptions(precision=4)
-# Disable Scientific Notation:
-np.set_printoptions(suppress=True)
-# -----------------------------------------------------------
+# ---------------------NUMPY PRINT OPTIONS---------------------
+# 4 decimal variable precision and disable scientific notation:
+np.set_printoptions(precision=4, suppress=True)
+# -------------------------------------------------------------
 
 
 def is_any_negative(array):
