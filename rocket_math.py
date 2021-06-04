@@ -3,7 +3,10 @@ This file defines the Rocket class and the general math functions needed to
 calculate parameters for data generation.
 """
 
+from datetime import date
+
 import numpy as np
+import geomag as gm
 from pyquaternion import Quaternion
 
 # -----------------------CONSTANTS---------------------------
@@ -44,7 +47,12 @@ ANGULAR_RATES = np.array([X_ANGULAR_RATE, Y_ANGULAR_RATE, Z_ANGULAR_RATE])
 # Launch site parameters
 TOWER_ANGLE = 90    # TODO: implement proper launch angle
 LAUNCH_SITE_ALTITUDE = 0
+LAUNCH_SITE_LATITUDE = 32.99078 # Latitude at SAC
+LAUNCH_SITE_LONGITUDE = -106.97514  # Longitude at SAC
 LOCAL_MAGNETIC_FIELD = 0  # TODO: figure out what we need to actually store
+
+# Initialize coefficient file for magnetic field model (currently valid from 2020-2025)
+MAG_COEFFS = gm.geomag.GeoMag("WMM/WMM.COF")
 
 # Tolerance for equality checks
 TOLERANCE = 0.001
@@ -55,12 +63,9 @@ TOLERANCE = 0.001
 class Rocket:
     """
     A class used to represent a Rocket object.
-
     ...
-
     Attributes
     ----------
-
     mass: dict of {str : float}
     thrust: numpy.array
     burn_time: float
@@ -76,21 +81,29 @@ class Rocket:
     altitude: float
     body_mag_field: numpy.array
     world_mag_field: numpy.array
-
     Notes
     -----
     orientation is in the format of [w, x, y, z], where [w] is the scalar part
     of the quaternion and [x, y, z] are the vector parts.
+
+    world_mag_field is in the format of [D, I, H, X, Y, Z, F], where:
+        D = Geomagnetic declination [deg]
+        I = Geomagnetic inclination [deg]
+        H = Horizontal geomagnetic field intensity [nT]
+        X = North component of geomagnetic field intensity [nT]
+        Y = East component of geomagnetic field intensity [nT]
+        Z = Vertical component of geomagnetic field intensity [nT]
+        F = Total geomagnetic field intensity [nT]
+
+    However, body_mag_field only includes the X,Y,Z components.
     """
 
     def __init__(self, mass=None, thrust=np.array([0, 0, 0]), burn_time=0,
                  sensor_noise=None):
         """
         Initialize a Rocket.
-
         Parameters
         ----------
-
         mass: dict of {str : float}
             mass is a dict of {"total_mass": float, "body_mass": float,
             "prop_mass": float} where "total_mass" represents the total mass
@@ -98,14 +111,11 @@ class Rocket:
             rocket (without the combustible mass), and "prop_mass" represents
             the mass of the combustible materials in the rocket (i.e. oxidizer,
             fuel).
-
         thrust: numpy.array
             thrust represents the average thrust the Rocket generates during
             a flight.
-
         burn_time: float
             burn_time is the amount of time the Rocket generates thrust.
-
         sensor_noise: dict of {str : float}
             sensor_noise is a dict of {"press_noise": float, "temp_noise":
             float, "accel_noise": float, "gyro_noise": float, "mag_noise":
@@ -127,16 +137,16 @@ class Rocket:
         self.position = np.array([0.0, 0.0, 0.0])  # [m] (cartesian vector)
         self.position_enu = np.array([0.0, 0.0, 0.0])  # [m]
         self.velocity = np.array([0.0, 0.0, 0.0])  # [m/s]
+        self.altitude = 0  # [m]
         self.world_acceleration = np.array([0.0, 0.0, 0.0])  # [m/s^2]
         self.body_acceleration = np.array([0.0, 0.0, 0.0])  # [m/s^2]
         self.orientation = np.array([1.0, 0.0, 0.0, 0.0])  # identity quat.
         self.baro_pressure = 0  # [KPa]
         self.temperature = 0  # [Celsius]
-        self.altitude = 0  # [m]
         self.body_mag_field = np.array(
-            [0.0, 0.0, 0.0])  # Waiting on model choice
+            [0.0, 0.0, 0.0])  # See class docstring
         self.world_mag_field = np.array(
-            [0.0, 0.0, 0.0])  # Waiting on model choice
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # See class docstring
 
     def __repr__(self):
         """
@@ -395,6 +405,23 @@ class Rocket:
         if position[2] < 0:
             position[2] = 0
         return position
+
+    def update_world_magnetic_field(self, current_date=date.today()) -> np.array([]):
+        """
+        Calculates the seven magnetic components of the Rocket object based on
+        launch site latitude/longitude, current date, and current altitude.
+
+        Returns
+        -------
+        numpy.array
+            Numpy array (containing data with float type) representing the
+            seven magnetic components of the Rocket object (Note: in NED coordinate frame).
+        """
+        mag_components = MAG_COEFFS.GeoMag(LAUNCH_SITE_LATITUDE, LAUNCH_SITE_LONGITUDE,
+                                           self.altitude, current_date)
+        return np.array([mag_components.dec, mag_components.dip, mag_components.bh,
+                         mag_components.bx, mag_components.by, mag_components.bz,
+                         mag_components.ti])
 
     # Converts the position of the rocket for local cartesian to ENU [m]
     def cart_to_enu(self) -> np.array([]):

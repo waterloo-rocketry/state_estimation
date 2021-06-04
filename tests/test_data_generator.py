@@ -1,10 +1,10 @@
 # Test suite for data_generator.py
-from io import StringIO
 
 import numpy as np
 
 import rocket_math as rm
 import data_generator as data_gen
+import sensors
 
 '''
 Notes:
@@ -148,6 +148,7 @@ def test_initial_time_update(mocker):
     Test time_update() from initial state (initial launch).
     """
     time_dict = {"current_time": 0, "previous_time": 0, "timestep": 1}
+    timestep = 0.1
     test_rocket = rm.Rocket(
         {"total_mass": 110, "body_mass": 55, "prop_mass": 55},
         np.array([0, 0, 20000]), 100,
@@ -167,6 +168,7 @@ def test_initial_time_update(mocker):
     test_rocket_after_update.baro_pressure = 10
     test_rocket_after_update.body_acceleration = np.array([1, 1, 1])
     test_rocket_after_update.body_mag_field = np.array([0.5, 0.5, 0.5])
+    test_rocket_after_update.world_mag_field = np.array([0.5, 0.5, 0.5])
     mocker.patch('rocket_math.Rocket.update_thrust',
                  return_value=np.array([0, 0, 20000]))
     mocker.patch('rocket_math.Rocket.update_acceleration',
@@ -179,17 +181,19 @@ def test_initial_time_update(mocker):
         "total_mass": 110 - rm.MASS_LOSS * time_dict["timestep"],
         "body_mass": 55,
         "prop_mass": 55 - rm.MASS_LOSS * time_dict["timestep"]})
-    mocker.patch('rocket_math.Rocket.update_orientation',
-                 return_value=np.array([0.6216, 0, 0.0044, 0.7833]))
-    mocker.patch('rocket_math.Rocket.update_temperature',
-                 return_value=20)
-    mocker.patch('rocket_math.Rocket.update_baro_pressure',
-                 return_value=10)
-    mocker.patch('rocket_math.Rocket.update_body_acceleration',
-                 return_value=np.array([1, 1, 1]))
-    mocker.patch('rocket_math.Rocket.update_magnetic_field',
+    mocker.patch('rocket_math.Rocket.update_world_magnetic_field',
                  return_value=np.array([0.5, 0.5, 0.5]))
-    data_gen.time_update(test_rocket, time_dict)
+    mocker.patch('sensors.Gyro.update',
+                 return_value=np.array([0.6216, 0, 0.0044, 0.7833]))
+    mocker.patch('sensors.Thermistor.update',
+                 return_value=20)
+    mocker.patch('sensors.Baro_Pressure_Sensor.update',
+                 return_value=10)
+    mocker.patch('sensors.Accelerometer.update',
+                 return_value=np.array([1, 1, 1]))
+    mocker.patch('sensors.Magnetometer.update',
+                 return_value=np.array([0.5, 0.5, 0.5]))
+    data_gen.time_update(test_rocket, data_gen.init_sensors(), time_dict["current_time"], timestep)
     assert test_rocket == test_rocket_after_update
 
 
@@ -198,6 +202,7 @@ def test_secondary_time_update(mocker):
     Test time_update() from secondary state (after rocket has launched).
     """
     time_dict = {"current_time": 1, "previous_time": 0, "timestep": 1}
+    timestep = 0.1
     test_rocket = rm.Rocket(
         {"total_mass": 110 - rm.MASS_LOSS * time_dict["timestep"],
          "body_mass": 55,
@@ -222,6 +227,7 @@ def test_secondary_time_update(mocker):
     test_rocket_after_update.baro_pressure = 15
     test_rocket_after_update.body_acceleration = np.array([3, 3, 3])
     test_rocket_after_update.body_mag_field = np.array([1, 1, 1])
+    test_rocket_after_update.world_mag_field = np.array([1, 1, 1])
     mocker.patch('rocket_math.Rocket.update_thrust',
                  return_value=np.array([0, 0, 20000]))
     mocker.patch('rocket_math.Rocket.update_acceleration',
@@ -234,15 +240,17 @@ def test_secondary_time_update(mocker):
         "total_mass": 110 - 2 * rm.MASS_LOSS * time_dict["timestep"],
         "body_mass": 55,
         "prop_mass": 55 - 2 * rm.MASS_LOSS * time_dict["timestep"]})
-    mocker.patch('rocket_math.Rocket.update_orientation',
-                 return_value=np.array([-0.2272, 0, 0.0054, 0.9738]))
-    mocker.patch('rocket_math.Rocket.update_temperature',
-                 return_value=25)
-    mocker.patch('rocket_math.Rocket.update_baro_pressure',
-                 return_value=15)
-    mocker.patch('rocket_math.Rocket.update_body_acceleration',
-                 return_value=np.array([3, 3, 3]))
-    mocker.patch('rocket_math.Rocket.update_magnetic_field',
+    mocker.patch('rocket_math.Rocket.update_world_magnetic_field',
                  return_value=np.array([1, 1, 1]))
-    data_gen.time_update(test_rocket, time_dict)
+    mocker.patch('sensors.Gyro.update',
+                 return_value=np.array([-0.2272, 0, 0.0054, 0.9738]))
+    mocker.patch('sensors.Thermistor.update',
+                 return_value=25)
+    mocker.patch('sensors.Baro_Pressure_Sensor.update',
+                 return_value=15)
+    mocker.patch('sensors.Accelerometer.update',
+                 return_value=np.array([3, 3, 3]))
+    mocker.patch('sensors.Magnetometer.update',
+                 return_value=np.array([1, 1, 1]))
+    data_gen.time_update(test_rocket, data_gen.init_sensors(), time_dict["current_time"], timestep)
     assert test_rocket == test_rocket_after_update
